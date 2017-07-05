@@ -1,6 +1,6 @@
 ;;;;  Get the test data:
 ; 
-rcols, 'simul392data.tab'
+rcols, 'simul392data.tab', HJD, MAG, MAGERR, FILTS 
 ;
 ;;;;  Set pmin,dphi, and filtnams, and define variable names to receive output 
 ;
