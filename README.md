@@ -7,7 +7,7 @@ IDL routines for period finding with multiband data that are sparsely sampled.  
 HOW TO USE:
 
 All the necessary code is included. There are no dependencies beyond those contained in a regular IDL distribution.
-Compatibility with GDL is untested at this time. For GDL compatibility, the IDL library routines MOMENT.pro and MEAN.pro have also been provided.
+For GDL compatibility, the IDL library routines MOMENT.pro and MEAN.pro have also been provided: the code appears to work with GDL Version 0.9.4.
 
 There are also 2 data sets as examples:  1) 392work2.tab (which are the data presented in the paper (saha & vivas, 2017) for an RRLyrae star measured in 5 bands (ready for submission at this time)  and 2) simul392data.tab (a simulation of what 10 years of observations in the same 5 bands for the same object in the LSST survey might look like -- see paper for details).  These data are tabular data: the IDL  procedures testrun and test2run(provided, see below) will ingest the times of observation, measured mags, estimated uncertainties, passband index,  and passband information into IDL variables HJD, MAG, MAGERR, FILTS respectively.
 
