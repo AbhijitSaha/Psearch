@@ -1,4 +1,4 @@
-
+  
 ;;;;  INPUTS :   
 ;;;;;  hjd      =  the time array. Can be in any units. Output period array PTEST (see below) will be in the same units
 ;;;;;  mag      =  all measured signal values in an array matched to time array hjd. All passbands included.
@@ -34,9 +34,11 @@ if(reply eq 'Y' or reply eq 'y') then begin
   device, /portrait, xo=0.5, xs=7.5, yo=0.5, ys=10.0, file='plot.ps', /inches, /color
 ;  loadct, 13
   tvctedit, 128, 255, 128, 0
+  tvctedit, 0, 0, 0, 0
   psopen = 1 
 endif else begin
   set_plot, 'x'
+  orange = 255 + 128*256L
 endelse 
 ;
 nfilts = n_elements(FILTNAMS)
@@ -65,10 +67,17 @@ for i = 0, nfilts-1L do begin
   yrng = [0., ymax]
   xmax = 1./pmin
   xrng = [0., xmax]
-  plot, 1./x, psi, xth=3, yth=3, chars=1.3, charth=2, xr=xrng, yr=yrng, xsty=1, ysty=1
-  oplot, 1/x, conf, color=128
-  xyouts, 0.95*xmax, 0.8*ymax, filtnams(i), chars=1.5, charth=2
-  xyouts, -0.058*xmax, 0.45*ymax, '!7W!X',  orient=90, chars=1.5, charth=2  
+  if(psopen ge 1) then begin  
+      plot, 1./x, psi, xth=3, yth=3, chars=1.3, charth=2, xr=xrng, yr=yrng, xsty=1, ysty=1, color=0
+     oplot, 1/x, conf, color=128
+     xyouts, 0.95*xmax, 0.8*ymax, filtnams(i), chars=1.5, charth=2, color=0
+     xyouts, -0.058*xmax, 0.45*ymax, '!7W!X',  orient=90, chars=1.5, charth=2, color=0 
+  endif else begin 
+     plot, 1./x, psi, xth=3, yth=3, chars=1.3, charth=2, xr=xrng, yr=yrng, xsty=1, ysty=1
+     oplot, 1/x, conf, color=orange
+     xyouts, 0.95*xmax, 0.8*ymax, filtnams(i), chars=1.5, charth=2
+     xyouts, -0.058*xmax, 0.45*ymax, '!7W!X',  orient=90, chars=1.5, charth=2
+  endelse 
 ;
     psiacc = psi + psiacc
     confacc = conf + confacc
@@ -76,11 +85,19 @@ endfor
 ;
   ymax = max(psiacc)*1.2
   yrng = [0., ymax]
-  plot, 1./x, psiacc,  xth=3, yth=3, chars=1.3, charth=2, xr=xrng, yr=yrng, ysty=1, xsty=1
-  oplot, 1./x, confacc, color=128
-  xyouts, 0.9*xmax, 0.8*ymax, 'ALL', chars=1.5, charth=2
-  xyouts, 0.4*xmax, -0.4*ymax, 'Frequency (days!E-1!N)', chars=1.3, charth=2
-  xyouts, -0.058*xmax, 0.45*ymax, '!7W!X', orient=90, chars=1.5, charth=2   
+  if(psopen ge 1) then begin 
+     plot, 1./x, psiacc,  xth=3, yth=3, chars=1.3, charth=2, xr=xrng, yr=yrng, ysty=1, xsty=1, color=0
+     oplot, 1./x, confacc, color=128
+     xyouts, 0.9*xmax, 0.8*ymax, 'ALL', chars=1.5, charth=2, color=0
+     xyouts, 0.4*xmax, -0.4*ymax, 'Frequency (days!E-1!N)', chars=1.3, charth=2, color=0
+     xyouts, -0.058*xmax, 0.45*ymax, '!7W!X', orient=90, chars=1.5, charth=2, color=0   
+   endif else begin 
+     plot, 1./x, psiacc,  xth=3, yth=3, chars=1.3, charth=2, xr=xrng, yr=yrng, ysty=1, xsty=1
+     oplot, 1./x, confacc, color=orange
+     xyouts, 0.9*xmax, 0.8*ymax, 'ALL', chars=1.5, charth=2
+     xyouts, 0.4*xmax, -0.4*ymax, 'Frequency (days!E-1!N)', chars=1.3, charth=2
+     xyouts, -0.058*xmax, 0.45*ymax, '!7W!X', orient=90, chars=1.5, charth=2
+   endelse
 ;
 if(psopen eq 1) then begin
   device, /close
