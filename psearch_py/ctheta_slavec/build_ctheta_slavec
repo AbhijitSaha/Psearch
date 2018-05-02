@@ -1,0 +1,5 @@
+#!/bin/bash -x
+mkdir .old
+mv ctheta_slavec.so .old/
+python setup_ctheta_slave.py build_ext --inplace
+#EOF

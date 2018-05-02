@@ -1,0 +1,5 @@
+#!/bin/bash -x
+mkdir .old
+mv scargle_fastc.so .old/
+python setup_scargle_fast.py build_ext --inplace
+#EOF
