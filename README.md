@@ -1,17 +1,18 @@
 # Psearch
-IDL routines and a Python/Cython/C module for Period search with hybrid algorithm. 
+
+IDL routines and the Python/Cython/C module for Period search with hybrid algorithm. 
 
 IDL routines and the Python/Cython/C module for period finding with multiband data that are sparsely sampled.  Hybridizes Lomb-Scargle and Lafler-Kinman approaches. An article with a fuller description has been published:
 
     Saha, A., & Vivas, A. K. 2017, Astronomical Journal, 154, 231;
-    A HYBRID ALGORITHM FOR PERIOD ANALYSIS FROM MULTI-BAND DATA WITH
-    SPARSE AND IRREGULAR SAMPLING FOR ARBITRARY LIGHT CURVE SHAPES
+    A Hybrid Algorithm for Period Analysis from Multiband Data with
+    Sparse and Irregular Sampling for Abritrary Light-curve Shapes
 
 Henceforth, this article will be referred to as "the paper".
 
 If you can not get the article, you can get the preprint at
 
-   https://arxiv.org/abs/1709.10156
+    https://arxiv.org/abs/1709.10156
 
 To be self-complete, this repository includes code provided by others, but within the public domain.
 
@@ -45,12 +46,11 @@ The REAME.md file shows how to get the psearch_py.py from GitHub and then how to
 
 The test input data file (B1392all.tab) is provided.
 
-The main function of the psearch_py module is a built-in demo to test the module. To run the demo, type the following command
+The function main(), near the end of the file psearch_py.py, is a built-in demo to test the psearch_py module. To run the demo, type the following command
 
     python psearch_py.py
 
-The table presented at the end of the demo indicates that the "best" estimate for the period (based on all of the filters) of the RR Lyrae star B1-392 is 0.5016247 +-  0.0000036 days which has a frequency value of 1.993522.  The phased light curve figure (psearch_fig_phi.png), which is created by running the demo, uses a period value of 0.501625.
+The table presented at the end of the demo indicates that the "best" estimate for the period (based on all of the filters) of the RR Lyrae star B1-392 is 0.5016247 +-  0.0000036 days which has a frequency value of 1.993522.  The phased light curve figure (psearch_fig_phi.png), which is created by running the demo, uses a period value of 0.501625 days.
 
-If you want to use the much faster Python/Cython/C version, please follow the instructions in the README.md file
-in the psearch_py subdirectory.
+If you want to use the much faster Python/Cython/C version, please follow the instructions in the README.md file in the psearch_py subdirectory to learn how to compile the required supporting C/Cython code.
 

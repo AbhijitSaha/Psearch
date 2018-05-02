@@ -3,8 +3,8 @@
 This is the Python/Cython/C version of the Psearch algorithm of
 
     Saha, A., & Vivas, A. K. 2017, Astronomical Journal, 154, 231;
-    A HYBRID ALGORITHM FOR PERIOD ANALYSIS FROM MULTI-BAND DATA WITH
-    SPARSE AND IRREGULAR SAMPLING FOR ARBITRARY LIGHT CURVE SHAPES
+    A Hybrid Algorithm for Period Analysis from Multiband Data with
+    Sparse and Irregular Sampling for Abritrary Light-curve Shapes
 
 by Kenneth Mighell (mighell at noao dot edu).
 
