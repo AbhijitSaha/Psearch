@@ -1,10 +1,25 @@
 # Psearch
-IDL routines for Period search with hybrid algorithm. 
+IDL routines and a Python/Cython/C module for Period search with hybrid algorithm. 
 
-IDL routines for period finding with multiband data that are sparsely sampled.  Hybridizes Lomb-Scargle and Lafler-Kinman approaches. A paper is nearly ready to submit with a fuller description (Saha & Vivas, 2017), henceforth referred to as "the paper".  To be self-complete, this repository includes code provided by others, but within the public domain.
+IDL routines and the Python/Cython/C module for period finding with multiband data that are sparsely sampled.  Hybridizes Lomb-Scargle and Lafler-Kinman approaches. An article with a fuller description has been published:
 
+    Saha, A., & Vivas, A. K. 2017, Astronomical Journal, 154, 231;
+    A HYBRID ALGORITHM FOR PERIOD ANALYSIS FROM MULTI-BAND DATA WITH
+    SPARSE AND IRREGULAR SAMPLING FOR ARBITRARY LIGHT CURVE SHAPES
 
-HOW TO USE:
+Henceforth, this article will be referred to as "the paper".
+
+If you can not get the article, you can get the preprint at
+
+   https://arxiv.org/abs/1709.10156
+
+To be self-complete, this repository includes code provided by others, but within the public domain.
+
+---
+
+## IDL version: HOW TO USE
+
+**NOTE: All of the IDL code exists in the main directory.**
 
 All the necessary code is included. There are no dependencies beyond those contained in a regular IDL distribution.
 For GDL compatibility, the IDL library routines MOMENT.pro and MEAN.pro have also been provided: the code appears to work with GDL Version 0.9.4.
@@ -17,3 +32,25 @@ The program does not supply an answer. For now is up to the user to interprete t
 
 
 A general tool for helping with the examination and analysis of the periodograms is under construction.
+
+---
+
+## Python/Cython/C version: HOW TO USE
+
+**NOTE: All of the Python/Cython/C code exists in the psearch_py subdirectory and its subdirectories.**
+
+First, go to the psearch_py subdirectory.
+
+The REAME.md file shows how to get the psearch_py.py from GitHub and then how to test the code.
+
+The test input data file (B1392all.tab) is provided.
+
+The main function of the psearch_py module is a built-in demo to test the module. To run the demo, type the following command
+
+    python psearch_py.py
+
+The table presented at the end of the demo indicates that the "best" estimate for the period (based on all of the filters) of the RR Lyrae star B1-392 is 0.5016247 +-  0.0000036 days which has a frequency value of 1.993522.  The phased light curve figure (psearch_fig_phi.png), which is created by running the demo, uses a period value of 0.501625.
+
+If you want to use the much faster Python/Cython/C version, please follow the instructions in the README.md file
+in the psearch_py subdirectory.
+
