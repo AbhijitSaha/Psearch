@@ -1,0 +1,187 @@
+
+Found  5  bad data values:
+***** REJECTED DATA *****: BEGIN
+row__,hjd__,mag__,magerr__,filts__
+[[2.10000000e+01 5.64538478e+04 2.82020000e+01 2.23000000e-01
+  0.00000000e+00]
+ [1.80000000e+02 5.71159103e+04 2.23870000e+01 7.67100000e+00
+  2.00000000e+00]
+ [2.98000000e+02 5.64507270e+04 2.18970000e+01 2.59000000e-01
+  4.00000000e+00]
+ [3.05000000e+02 5.64527322e+04 2.19830000e+01 8.60000000e+00
+  4.00000000e+00]
+ [3.48000000e+02 5.71157314e+04 2.19820000e+01 1.95880000e+01
+  4.00000000e+00]]
+***** REJECTED DATA *****: END
+
+psearch: BEGIN
+
+Reference:
+ 
+Saha, A., & Vivas, A. K. 2017, Astronomical Journal, 154, 231;
+    A HYBRID ALGORITHM FOR PERIOD ANALYSIS FROM MULTI-BAND DATA WITH
+    SPARSE AND IRREGULAR SAMPLING FOR ARBITRARY LIGHT CURVE SHAPES
+IDL CODE (Abhijit Saha):
+    https://github.com/AbhijitSaha/Psearch
+PYTHON/CYTHON/C CODE (Kenenth Mighell):
+    /private/tmp/Psearch-master/psearch_py/psearch_py.py
+    [psearch_py (0.17.5)]
+ 
+psearch:  u  filter
+periodpsi2: BEGIN
+periodpsi2:  57  observations
+periodpsi2: number of frequency samples =  173211
+scargle: DONE     0.795 seconds
+scargle: DONE     0.789 seconds
+scargle: DONE     0.793 seconds
+ctheta_slave: DONE     0.512 seconds
+ctheta_slave: DONE     0.512 seconds
+ctheta_slave: DONE     0.515 seconds
+periodpsi2: END
+TABLE: BEGIN
+rank   -----Period [days]-----       Psi    index  Frequency  Thresh
+ 1     0.5012330 +-  0.0000036    203.18    69054   1.995080    9.16
+ 2     0.5012475 +-  0.0000036    181.99    69052   1.995023    5.53
+ 3     0.5016102 +-  0.0000036    177.32    69002   1.993580    6.68
+ 4     0.5020025 +-  0.0000036    165.71    68948   1.992022    3.89
+ 5     0.5016392 +-  0.0000036    165.16    68998   1.993465    6.22
+ 6     1.0108859 +-  0.0000147    150.45    34189   0.989231    6.06
+ 7     0.5008636 +-  0.0000036    144.50    69105   1.996552    4.80
+ 8     1.0093552 +-  0.0000147    143.58    34241   0.990732    6.99
+ 9     0.5019734 +-  0.0000036    133.21    68952   1.992138    3.57
+10     0.5015811 +-  0.0000036    132.89    69006   1.993695    5.81
+TABLE: END
+psearch:  g  filter
+periodpsi2: BEGIN
+periodpsi2:  68  observations
+periodpsi2: number of frequency samples =  173211
+scargle: DONE     0.942 seconds
+scargle: DONE     0.943 seconds
+scargle: DONE     0.939 seconds
+ctheta_slave: DONE     0.636 seconds
+ctheta_slave: DONE     0.638 seconds
+ctheta_slave: DONE     0.637 seconds
+periodpsi2: END
+TABLE: BEGIN
+rank   -----Period [days]-----       Psi    index  Frequency  Thresh
+ 1     0.5016247 +-  0.0000036    834.53    69000   1.993522    6.38
+ 2     0.5020025 +-  0.0000036    599.93    68948   1.992022    6.96
+ 3     0.5012402 +-  0.0000036    518.81    69053   1.995051    5.42
+ 4     0.5023808 +-  0.0000036    373.32    68896   1.990522    6.62
+ 5     0.5024026 +-  0.0000036    295.81    68893   1.990435    7.97
+ 6     0.5008636 +-  0.0000036    261.72    69105   1.996552    5.40
+ 7     1.0047616 +-  0.0000146    257.38    34398   0.995261    1.85
+ 8     1.0093552 +-  0.0000147    243.13    34241   0.990732    2.68
+ 9     1.0078291 +-  0.0000147    230.33    34293   0.992232    2.95
+10     1.0063076 +-  0.0000146    215.26    34345   0.993732    2.62
+TABLE: END
+psearch:  r  filter
+periodpsi2: BEGIN
+periodpsi2:  69  observations
+periodpsi2: number of frequency samples =  173211
+scargle: DONE     0.948 seconds
+scargle: DONE     0.949 seconds
+scargle: DONE     0.948 seconds
+ctheta_slave: DONE     0.641 seconds
+ctheta_slave: DONE     0.640 seconds
+ctheta_slave: DONE     0.643 seconds
+periodpsi2: END
+TABLE: BEGIN
+rank   -----Period [days]-----       Psi    index  Frequency  Thresh
+ 1     0.5016247 +-  0.0000036    834.08    69000   1.993522    3.92
+ 2     0.5012475 +-  0.0000036    766.45    69052   1.995023    4.21
+ 3     0.5020025 +-  0.0000036    453.85    68948   1.992022    3.75
+ 4     0.5008636 +-  0.0000036    429.24    69105   1.996552    4.30
+ 5     0.5020170 +-  0.0000036    414.18    68946   1.991964    4.70
+ 6     0.5023808 +-  0.0000036    268.97    68896   1.990522    3.64
+ 7     0.5024026 +-  0.0000036    247.39    68893   1.990435    4.00
+ 8     0.5012257 +-  0.0000036    192.32    69055   1.995109    3.30
+ 9     1.0047616 +-  0.0000146    183.17    34398   0.995261    4.02
+10     1.0032494 +-  0.0000145    181.23    34450   0.996761    2.34
+TABLE: END
+psearch:  i  filter
+periodpsi2: BEGIN
+periodpsi2:  94  observations
+periodpsi2: number of frequency samples =  173211
+scargle: DONE     1.288 seconds
+scargle: DONE     1.292 seconds
+scargle: DONE     1.292 seconds
+ctheta_slave: DONE     0.889 seconds
+ctheta_slave: DONE     0.890 seconds
+ctheta_slave: DONE     0.891 seconds
+periodpsi2: END
+TABLE: BEGIN
+rank   -----Period [days]-----       Psi    index  Frequency  Thresh
+ 1     0.5016247 +-  0.0000036    972.54    69000   1.993522    8.92
+ 2     0.5020170 +-  0.0000036    648.29    68946   1.991964    9.47
+ 3     0.5012402 +-  0.0000036    551.07    69053   1.995051    8.38
+ 4     0.5008564 +-  0.0000036    348.90    69106   1.996580    8.67
+ 5     0.5024026 +-  0.0000036    291.71    68893   1.990435    9.69
+ 6     0.3339042 +-  0.0000016    256.80   103709   2.994871   10.64
+ 7     0.3338978 +-  0.0000016    207.73   103711   2.994928   11.30
+ 8     0.3337274 +-  0.0000016    207.40   103764   2.996457   11.07
+ 9     1.0032494 +-  0.0000145    204.03    34450   0.996761   11.41
+10     0.5015594 +-  0.0000036    197.32    69009   1.993782   12.54
+TABLE: END
+psearch:  z  filter
+periodpsi2: BEGIN
+periodpsi2:  80  observations
+periodpsi2: number of frequency samples =  173211
+scargle: DONE     1.107 seconds
+scargle: DONE     1.107 seconds
+scargle: DONE     1.107 seconds
+ctheta_slave: DONE     0.743 seconds
+ctheta_slave: DONE     0.745 seconds
+ctheta_slave: DONE     0.747 seconds
+periodpsi2: END
+TABLE: BEGIN
+rank   -----Period [days]-----       Psi    index  Frequency  Thresh
+ 1     0.5016247 +-  0.0000036    598.15    69000   1.993522    4.07
+ 2     0.5020170 +-  0.0000036    470.46    68946   1.991964    4.60
+ 3     0.5012402 +-  0.0000036    464.76    69053   1.995051    4.10
+ 4     0.5024026 +-  0.0000036    272.20    68893   1.990435    4.03
+ 5     0.5008564 +-  0.0000036    219.98    69106   1.996580    3.25
+ 6     0.3339042 +-  0.0000016    181.06   103709   2.994871    4.38
+ 7     0.5027962 +-  0.0000036    133.10    68839   1.988878    3.77
+ 8     0.3337339 +-  0.0000016    121.28   103762   2.996400    4.07
+ 9     0.5015521 +-  0.0000036     99.58    69010   1.993811    1.57
+10     0.3337210 +-  0.0000016     99.46   103766   2.996515    4.55
+TABLE: END
+ 
+========== ALL FILTERS ========== 
+ 
+TABLE: BEGIN
+rank   -----Period [days]-----       Psi    index  Frequency  Thresh
+ 1     0.5016247 +-  0.0000036   3411.90    69000   1.993522   28.94
+ 2     0.5012402 +-  0.0000036   2324.19    69053   1.995051   28.05
+ 3     0.5020170 +-  0.0000036   2149.13    68946   1.991964   30.65
+ 4     0.5024026 +-  0.0000036   1204.91    68893   1.990435   29.88
+ 5     0.5008636 +-  0.0000036   1173.50    69105   1.996552   26.91
+ 6     0.3339042 +-  0.0000016    836.99   103709   2.994871   33.39
+ 7     1.0032494 +-  0.0000145    709.01    34450   0.996761   22.58
+ 8     1.0093552 +-  0.0000147    669.49    34241   0.990732   27.25
+ 9     1.0047907 +-  0.0000146    663.95    34397   0.995232   27.34
+10     1.0108859 +-  0.0000147    597.45    34189   0.989231   24.45
+TABLE: END
+
+Reference:
+ 
+Saha, A., & Vivas, A. K. 2017, Astronomical Journal, 154, 231;
+    A HYBRID ALGORITHM FOR PERIOD ANALYSIS FROM MULTI-BAND DATA WITH
+    SPARSE AND IRREGULAR SAMPLING FOR ARBITRARY LIGHT CURVE SHAPES
+IDL CODE (Abhijit Saha):
+    https://github.com/AbhijitSaha/Psearch
+PYTHON/CYTHON/C CODE (Kenenth Mighell):
+    /private/tmp/Psearch-master/psearch_py/psearch_py.py
+    [psearch_py (0.17.5)]
+ 
+psearch: END
+psearch_fig_obs.png  <--- plotfile written  :-)
+psearch_fig_psi.png  <--- plotfile written  :-)
+psearch_fig_phi.png  <--- plotfile written  :-)
+
+Period:  0.501625
+
+main:   26.748 seconds [walltime for psearch_py]
+
+main: That's all folks!  :-)
