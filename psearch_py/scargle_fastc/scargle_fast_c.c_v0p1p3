@@ -5,7 +5,6 @@
  *  Version: 0.1.1  2018APR27
  *  Version: 0.1.2  2018APR27
  *  Version: 0.1.3  2018APR27
- *  Version: 0.1.4  2018MAY05  Added documentation
  *
  * This is a C version of the Python function 
  *   def scargle_fast_py( t, c, omega, nfreq ):
@@ -20,49 +19,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
-
-/*
-    NAME:                                                                         
-        scargle_fast_py                                                           
-                                                                            
-    PURPOSE:                                                                      
-        Compute the Lomb-Scargle periodogram of an unevenly sampled lightcurve    
-                                                                                  
-    CATEGORY:                                                                     
-        time series analysis                                                      
-                                                                                  
-    INPUTS:                                                                       
-        tAD: times at which the time series was measured (e.g. HJD) (1-d array)
-	sz_tL: size of tAD
-        cAD: counts (corresponding count rates) (1-d array)
-	sz_cL: size of cAD
-        omegaAD: angular frequencies for which the PSD values are desired           
-            [PSD: Fourier Power Spectral Density] (1-d array)                            
-	sz_omegaL: size of omegaAD
-        nfreqL: number of independent frequencies                                  
-                                                                                  
-    OUTPUTS:                                                                      
-        pxAD: the psd-values corresponding to omega (1-d array)
-
-    NOTE BENE: tAD, cAD, omegaAD, and pxAD must have the same length
-                                                                                  
-    DESCRIPTION:                                                                  
-        The Lomb Scargle PSD (Fourier Power Spectral Density) is computed 
-        according to the definitions given by
-
-        (1) Scargle, J. D. 1982, ApJ, 263, 835;
-            "Studies in astronomical time series analysis. II - Statistical 
-            aspects of spectral analysis of unevenly spaced data"
-
-        (2) Horne, J. H., & Baliunas, S. L. 1986, MNRAS, 302, 757;
-            "A prescription for period analysis of unevenly sampled time series"
-
-        (3) Press, W.H., & Rybicki, G.B. 1989, ApJ 338, 277;
-	    "Fast algorithm for spectral analysis of unevenly sampled data"
-
-    HERITAGE:
-        http://astro.uni-tuebingen.de/software/idl/aitlib/timing/scargle.pro      
-*/
 
 void scargle_fast_c
 (
@@ -101,7 +57,6 @@ void scargle_fast_c
   double meanD;
   double cAD_meanD;
   double sumD;
-
   long mL =  sz_tL;
   long nL = nfreqL;
   long n0L;
@@ -113,11 +68,12 @@ void scargle_fast_c
   assert( NULL != cAD );
   assert( NULL != omegaAD );
   assert( NULL != pxAD );
+
   assert( sz_tL == sz_cL );
   assert( sz_omegaL == nfreqL );
   assert( sz_pxL == nfreqL );
 
-  // zero out the output vector
+  //KJM: zero out the output vector
   for (j=0; j<nL; j++)
     pxAD[j] = 0.0;
 
@@ -139,7 +95,6 @@ void scargle_fast_c
     noiseD = sqrt(varD);
   }
 
-  // make times manageable (Scargle periodogram is time-shift invariant)
   timeAD = calloc( mL, sizeof(double)); 
   assert( NULL != timeAD );
   tD = tAD[0];
@@ -151,14 +106,6 @@ void scargle_fast_c
 
   omAD = &omegaAD[0];  // alias
 
-  //
-  // ===== PERIODOGRAM: FAST VERSION ========================================
-  // Reference:
-  //   Press, W.H., & Rybicki, G.B. 1989, ApJ 338, 277;
-  //   "Fast algorithm for spectral analysis of unevenly sampled data"
-  //     
-
-  // Eq. (6); s2, c2
   s2AD = calloc( nL, sizeof(double)); 
   assert( NULL != s2AD );
   c2AD = calloc( nL, sizeof(double)); 
@@ -181,8 +128,6 @@ void scargle_fast_c
     }
   free(two_timeAD);
 
-  // Eq. (2): Definition -> tan(2omtau)
-  // --- tan(2omtau) =  s2 / c2
   omtauAD = calloc( nL, sizeof(double)); 
   assert( NULL != omtauAD );
   for (j=0; j<nL; j++)
@@ -197,7 +142,6 @@ void scargle_fast_c
       sinomtauAD[j] = sin(omtauAD[j]);
     }
 
-  // Eq. (7); total(cos(t-tau)^2) and total(sin(t-tau)^2)
   tmpAD = calloc( nL, sizeof(double)); 
   assert( NULL != tmpAD );
   for (j=0; j<nL; j++)
@@ -217,19 +161,13 @@ void scargle_fast_c
   free(tmpAD);
   free(omtauAD);
   free(s2AD);
-  free(c2AD);  
+  free(c2AD);  //KJM
 
-  //
-  // computing the periodogram for the original light curve
-  //
-
-  // subtract mean from data
   cnAD = calloc( nL, sizeof(double)); 
   assert( NULL != cnAD );
   for (j=0; j<mL; j++)
     cnAD[j] = cAD[j] - cAD_meanD;
 
-  // Eq. (5); sh and ch
   shAD = calloc( nL, sizeof(double)); 
   assert( NULL != shAD );
   chAD = calloc( nL, sizeof(double)); 
@@ -253,7 +191,6 @@ void scargle_fast_c
   free(cnAD);
   free(omi_timeAD);
 
-  // Eq. (3)
   tD = 0.5/(noiseD*noiseD);
   for (j=0; j<nL; j++)
     {
