@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
-# how to build:
-#   python setup_scargle_fast.py build_ext --inplace
+# Purpose: Setup.py file for the scargle_fastc module
+#  Author: Kenneth Mighell
+# Version: 0.3.1  2018MAY05
+#
+# Build command:
+#   python this_file.py build_ext --inplace
 
 from distutils.core import setup
 from distutils.extension import Extension

@@ -1,5 +1,9 @@
 #!/bin/bash -x
+module="scargle_fastc"
+# Purpose: Build command for this module
+#  Author: Kenneth Mighell
+# Version: 0.3.1  2018MAY05
 mkdir .old
-mv scargle_fastc.so .old/
-python setup_scargle_fast.py build_ext --inplace
+mv $module.so .old/
+python setup_$module.py build_ext --inplace
 #EOF

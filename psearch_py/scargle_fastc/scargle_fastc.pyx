@@ -1,3 +1,7 @@
+# Purpose: Cython wrapper for the scargle_fastc module
+#  Author: Kenneth Mighell
+# Version: 0.3.1  2018MAY05
+
 import cython
 import numpy as np
 cimport numpy as np

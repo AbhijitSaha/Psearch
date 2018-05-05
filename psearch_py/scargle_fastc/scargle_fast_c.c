@@ -1,11 +1,8 @@
 /*
- * scargle_fast_c
+ * Function: scargle_fast_c
  * Language: C 
  *   Author: Kenneth J. Mighell
- *  Version: 0.1.1  2018APR27
- *  Version: 0.1.2  2018APR27
- *  Version: 0.1.3  2018APR27
- *  Version: 0.1.4  2018MAY05  Added documentation
+ *  Version: 0.1.5  2018MAY05
  *
  * This is a C version of the Python function 
  *   def scargle_fast_py( t, c, omega, nfreq ):
@@ -23,7 +20,7 @@
 
 /*
     NAME:                                                                         
-        scargle_fast_py                                                           
+        scargle_fast_c                                                       
                                                                             
     PURPOSE:                                                                      
         Compute the Lomb-Scargle periodogram of an unevenly sampled lightcurve    
@@ -160,7 +157,7 @@ void scargle_fast_c
   //   "Fast algorithm for spectral analysis of unevenly sampled data"
   //     
 
-  // Eq. (6); s2, c2
+  // Eq. (6): s2, c2
   s2AD = calloc( nL, sizeof(double)); 
   assert( NULL != s2AD );
   c2AD = calloc( nL, sizeof(double)); 
@@ -183,8 +180,7 @@ void scargle_fast_c
     }
   free(two_timeAD);
 
-  // Eq. (2): Definition -> tan(2omtau)
-  // --- tan(2omtau) =  s2 / c2
+  // Eq. (2): tan(2omtau) =  s2 / c2
   omtauAD = calloc( nL, sizeof(double)); 
   assert( NULL != omtauAD );
   for (j=0; j<nL; j++)
@@ -199,7 +195,7 @@ void scargle_fast_c
       sinomtauAD[j] = sin(omtauAD[j]);
     }
 
-  // Eq. (7); total(cos(t-tau)^2) and total(sin(t-tau)^2)
+  // Eq. (7)
   tmpAD = calloc( nL, sizeof(double)); 
   assert( NULL != tmpAD );
   for (j=0; j<nL; j++)
