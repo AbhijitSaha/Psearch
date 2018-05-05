@@ -44,7 +44,9 @@
     OUTPUTS:                                                                      
         pxAD: the psd-values corresponding to omega (1-d array)
 
-    NOTE BENE: tAD, cAD, omegaAD, and pxAD must have the same length
+    NOTE BENE: 
+        (1) tAD and cAD must have the same length (i.e, sz_tL == sz_cL )
+        (2) length of omegaAD must be equal to nfreqL (i.e., sz_omegaL == nfreqL )
                                                                                   
     DESCRIPTION:                                                                  
         The Lomb Scargle PSD (Fourier Power Spectral Density) is computed 
