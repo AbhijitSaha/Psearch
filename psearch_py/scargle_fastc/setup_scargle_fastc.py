@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-# Purpose: Setup.py file for the scargle_fastc module
-#  Author: Kenneth Mighell
-# Version: 0.3.1  2018MAY05
+# Purpose: setup.py file for the scargle_fastc module
+#  Author: Kenneth J. Mighell
+# Version: 0.3.2  2018MAY06
 #
 # Build command:
 #   python this_file.py build_ext --inplace

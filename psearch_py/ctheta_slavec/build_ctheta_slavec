@@ -1,5 +1,9 @@
 #!/bin/bash -x
+module="ctheta_slavec"
+# Purpose: Build command for this module
+#  Author: Kenneth J. Mighell
+# Version: 0.3.1  2018MAY06
 mkdir .old
-mv ctheta_slavec.so .old/
-python setup_ctheta_slave.py build_ext --inplace
+mv $module.so .old/
+python setup_$module.py build_ext --inplace
 #EOF

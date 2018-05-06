@@ -1,3 +1,7 @@
+# Purpose: Cython wrapper for the ctheta_slavec module
+#  Author: Kenneth J. Mighell
+# Version: 0.3.2  2018MAY06
+
 import cython
 import numpy as np
 cimport numpy as np

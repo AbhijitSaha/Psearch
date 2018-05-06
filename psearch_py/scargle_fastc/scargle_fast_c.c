@@ -2,7 +2,7 @@
  * Function: scargle_fast_c
  * Language: C 
  *   Author: Kenneth J. Mighell
- *  Version: 0.1.5  2018MAY05
+ *  Version: 0.1.6  2018MAY06
  *
  * This is a C version of the Python function 
  *   def scargle_fast_py( t, c, omega, nfreq ):
@@ -40,6 +40,7 @@
                                                                                   
     OUTPUTS:                                                                      
         pxAD: the psd-values corresponding to omega (1-d array)
+        sz_pxL: size of pxAD
 
     NOTE BENE: 
         (1) tAD and cAD must have the same length (i.e, sz_tL == sz_cL )

@@ -1,3 +1,10 @@
+/*
+ *     File: merge5.c
+ * Language: C 
+ *   Author: Kenneth J. Mighell
+ *  Version: 0.3.2  2018MAY06
+ */
+
 #include<stdio.h>
 
 // Sort data vector in ASCENDING order
