@@ -6,29 +6,34 @@ import platform
 import os 
 import sys
 
-cythonc = False
-if (os.path.isfile('ctheta_slavec.so') and os.path.isfile('scargle_fastc.so')):
-    import ctheta_slavec  #KJM Cython/C version of ctheta_slave
-    import scargle_fastc  #KJM Cython/C version of scargle_fast
-    cythonc = True
+cythonc = True
+try:
+    import psearch_pyc
+except ImportError:
+    cythonc = False
 
 # version information:
 from collections import namedtuple
 version_info = namedtuple('version_info','major minor micro')
-version_info = version_info(major=0,minor=17,micro=5) 
+version_info = version_info(major=0,minor=19,micro=4) 
 __version__ = '%d.%d.%d' % version_info
 
 
 def reference():
+    msg ='pure Python  (*** slow ***)'
+    if (cythonc):
+        msg = 'Python/Cython/C  (*** fast ***)'
     print ' '
     print 'Saha, A., & Vivas, A. K. 2017, Astronomical Journal, 154, 231;'
-    print '    A HYBRID ALGORITHM FOR PERIOD ANALYSIS FROM MULTI-BAND DATA WITH'
-    print '    SPARSE AND IRREGULAR SAMPLING FOR ARBITRARY LIGHT CURVE SHAPES'
+    print '    "A Hybrid Algorithm for Period Analysis from Multiband Data with'
+    print '    Sparse and Irregular Sampling for Arbitrary Light-curve Shapes"'
     print 'IDL CODE (Abhijit Saha):'
     print '    https://github.com/AbhijitSaha/Psearch'
     print 'PYTHON/CYTHON/C CODE (Kenenth Mighell):'
+    print '    https://github.com/AbhijitSaha/Psearch/psearch_py'
+    print '\nMODULE:'
     print '    %s' % os.path.abspath(__file__)
-    print '    [psearch_py (%s)]' % __version__
+    print '    [psearch_py (%s)  mode: %s ]' % (__version__,msg)
     print ' '
     return
 
@@ -79,8 +84,8 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
     assert isinstance(filts,np.ndarray)
     assert (filts.dtype == np.float64)
     assert (filts.shape == hjd_shape)
-    print 'psearch: BEGIN'
-    print '\nReference:'
+    print 'psearch: BEGIN ====================================================='
+    print '\nREFERENCE:'
     reference()
     nfilts = len(filtnams)
     psiacc = 0.
@@ -107,7 +112,7 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
     ptest = x
     print '\nReference:'
     reference()
-    print 'psearch: END'
+    print 'psearch: END ======================================================='
     return ptest, psi_m, thresh_m  #KJM
 
 
@@ -188,9 +193,9 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
     time20 = tm.time()
     #om, fy = scargle_py( tr, yr, omega=omega, nfreq=nfreq, old=False )[:2]
     #fy = scargle_fast_py( tr, yr, omega, nfreq )
-    #fy = scargle_fastc.scargle_fast( tr, yr, omega, nfreq ) 
+    #fy = psearch_pyc.scargle_fast( tr, yr, omega, nfreq ) 
     if (cythonc):
-        fy = scargle_fastc.scargle_fast( tr, yr, omega, nfreq ) 
+        fy = psearch_pyc.scargle_fast( tr, yr, omega, nfreq ) 
     else:
         fy = scargle_fast_py( tr, yr, omega, nfreq )
     time21   = tm.time()
@@ -206,9 +211,9 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
     time20   = tm.time()
     #om, fe = scargle_py( tr, er, omega=omega, nfreq=nfreq, old=False )[:2]
     #fe = scargle_fast_py( tr, er, omega, nfreq )
-    #fe = scargle_fastc.scargle_fast( tr, er, omega, nfreq )
+    #fe = psearch_pyc.scargle_fast( tr, er, omega, nfreq )
     if (cythonc):
-        fe = scargle_fastc.scargle_fast( tr, er, omega, nfreq ) 
+        fe = psearch_pyc.scargle_fast( tr, er, omega, nfreq ) 
     else:
         fe = scargle_fast_py( tr, er, omega, nfreq )
     time21   = tm.time()
@@ -224,9 +229,9 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
     time20   = tm.time()
     #om, fz = scargle_py( tr, zr, omega=omega, nfreq=nfreq, old=False )[:2]
     #fz = scargle_fast_py( tr, zr, omega, nfreq )
-    #fz = scargle_fastc.scargle_fast( tr, zr, omega, nfreq )
+    #fz = psearch_pyc.scargle_fast( tr, zr, omega, nfreq )
     if (cythonc):
-        fz = scargle_fastc.scargle_fast( tr, zr, omega, nfreq ) 
+        fz = psearch_pyc.scargle_fast( tr, zr, omega, nfreq ) 
     else:
         fz = scargle_fast_py( tr, zr, omega, nfreq )
     time21   = tm.time()
@@ -248,9 +253,10 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
     #theta = ctheta_slave_py(x, yr, tr, version=1)
     #theta = ctheta_slave_py(x, yr, tr)
     #theta = ctheta_slave_v3_pyjit(x, yr, tr)
-    #theta = ctheta_slavec.ctheta_slave(x, yr, tr)
+    #theta = psearch_pyc.ctheta_slave(x, yr, tr)
     if (cythonc):
-        theta = ctheta_slavec.ctheta_slave(x, yr, tr)
+        #theta = psearch_pyc.ctheta_slave(x, yr, tr)
+        theta = psearch_pyc.ctheta_slave(x, yr, tr)
     else:
         theta = ctheta_slave_v3_pyjit(x, yr, tr)
     time21   = tm.time()
@@ -267,9 +273,9 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
     #thetaerr = ctheta_slave_py(x, er, tr, version=1)
     #thetaerr = ctheta_slave_py(x, er, tr)
     #thetaerr = ctheta_slave_v3_pyjit(x, er, tr)
-    #thetaerr = ctheta_slavec.ctheta_slave(x, er, tr)
+    #thetaerr = psearch_pyc.ctheta_slave(x, er, tr)
     if (cythonc):
-        thetaerr = ctheta_slavec.ctheta_slave(x, er, tr)
+        thetaerr = psearch_pyc.ctheta_slave(x, er, tr)
     else:
         thetaerr = ctheta_slave_v3_pyjit(x, er, tr)
     time21   = tm.time()
@@ -286,9 +292,9 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
     #thetaz   = ctheta_slave_py(x, zr, tr, version=1)
     #thetaz   = ctheta_slave_py(x, zr, tr)
     #thetaz   = ctheta_slave_v3_pyjit(x, zr, tr)
-    #thetaz   = ctheta_slavec.ctheta_slave(x, zr, tr)
+    #thetaz   = psearch_pyc.ctheta_slave(x, zr, tr)
     if (cythonc):
-        thetaz = ctheta_slavec.ctheta_slave(x, zr, tr)
+        thetaz = psearch_pyc.ctheta_slave(x, zr, tr)
     else:
         thetaz = ctheta_slave_v3_pyjit(x, zr, tr)
     time21   = tm.time()
@@ -1228,28 +1234,27 @@ def main():
         sys.exit(1)
 
     # Get some data
-    #ifile = '392work2.tab'
-    #ifile = '392work2km1.tab'
-    #hjd0, mag0, magerr0, filts0 = np.loadtxt( ifile, unpack=True)
     ifile = 'B1392all.tab'
     hjd_, mag_, magerr_, filts_ = np.loadtxt( ifile, unpack=True)[:4]
     
     row= np.arange(len(hjd_))
-    bad = (magerr_ > 0.2) | (magerr_ < 0.)
+    bad = (magerr_ > 0.2) | (magerr_ <= 0.)
     nbad = np.count_nonzero(bad)
     if (nbad>0):
-        print '\nFound ',nbad,' bad data values:'
+        print '\nFound ',nbad,' bad observations:'
         hjd__    = hjd_[bad]
         mag__   = mag_[bad]
         magerr__ = magerr_[bad]
-        filts__  = filts_[bad]
+        filts__  = np.fix(filts_[bad])
         row__ = row[bad]+1
         print '***** REJECTED DATA *****: BEGIN'
-        print 'row__,hjd__,mag__,magerr__,filts__'
-        print np.c_[row__,hjd__,mag__,magerr__,filts__]
-        print '***** REJECTED DATA *****: END\n'
-
-    ok = (magerr_ <= 0.2 )
+        print '         HJD      '+'    MAG  '+'   MAGERR'+'  FILTER'+'    row'
+        for c1,c2,c3,c4,c5 in zip(hjd__,mag__, magerr__,filts__,row__):
+            print '%18.7f %8.3f %8.3f  %6d %6d' % (c1,c2,c3,c4,c5)
+        print '***** REJECTED DATA *****: END'
+        
+    ok = (magerr_ >= 0.0) & (magerr_ <= 0.2 )
+    print '\nFound ',np.count_nonzero(ok),' good observations\n'
     hjd0    = hjd_[ok]
     mag0    = mag_[ok]
     magerr0 = magerr_[ok]

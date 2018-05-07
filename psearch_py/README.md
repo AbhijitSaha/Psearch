@@ -19,7 +19,7 @@ than the pure Python version. Typical speedup factors are about 6.4X.
 
 ---
 
-## Fastest way to get psearch_py.py from GitHub
+## Fastest way to get psearch_py.py up and running
 
 (1) Using your favorite browser, go to the Psearch GitHub repository at
 
@@ -81,13 +81,12 @@ and then type the following command:
 
 (8) **Compile the C/Cython code** with the following command:
 
-        ./build_so_files
+        ./build_so_file
 
-If the compilation of the C/Cython code is successful, then 2 new files 
-with .so extensions have been created:
+If the compilation of the C/Cython code is successful, then a new file with 
+an .so extension has been created in the current working directory:
 
-        ctheta_slavec.so
-        scargle_fastc.so
+        psearch_pyc.so
 
 This build procedure has been tested using the Anaconda Python distribution.
 

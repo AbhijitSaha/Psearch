@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-# Purpose: setup.py file for the scargle_fastc module
+# Purpose: setup.py file for the psearch_pyc module
 #  Author: Kenneth J. Mighell
-# Version: 0.3.2  2018MAY06
+# Version: 0.1.1  2018MAY07
 #
 # Build command:
 #   python this_file.py build_ext --inplace
@@ -15,8 +15,8 @@ import numpy
 
 setup(
     cmdclass = {'build_ext': build_ext},
-    ext_modules = [Extension("scargle_fastc",
-                             sources=["scargle_fastc.pyx", "scargle_fast_c.c"],
+    ext_modules = [Extension("psearch_pyc",
+                             sources=["psearch_pyc.pyx", "psearch_py_c.c"],
                              include_dirs=[numpy.get_include()])],
 )
 #EOF

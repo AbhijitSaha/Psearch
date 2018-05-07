@@ -2,7 +2,7 @@
  * Function: ctheta_slave_c
  * Language: C 
  *   Author: Kenneth J. Mighell
- *  Version: 0.1.4  2018MAY06
+ *  Version: 0.1.5  2018MAY07
  *
  * This is a C version of the Python function 
  *   def ctheta_slave_v3_py( parray, mag, tobs ):
@@ -31,7 +31,7 @@ void MergeSortIndex(
 #define CYTHON
 //#undef CYTHON
 #ifdef CYTHON
-#include "merge5.c"
+#include "merge5_c.c"
 #endif
 
 /*

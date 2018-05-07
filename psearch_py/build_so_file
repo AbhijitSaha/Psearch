@@ -1,0 +1,8 @@
+#!/bin/bash -x
+mkdir .old
+mv *.so .old
+cd psearch_pyc
+./build_psearch_pyc
+cp psearch_pyc.so ../
+cd ../
+#EOF
