@@ -15,7 +15,7 @@ except ImportError:
 # version information:
 from collections import namedtuple
 version_info = namedtuple('version_info','major minor micro')
-version_info = version_info(major=0,minor=19,micro=4) 
+version_info = version_info(major=0,minor=19,micro=5) 
 __version__ = '%d.%d.%d' % version_info
 
 
@@ -30,7 +30,7 @@ def reference():
     print 'IDL CODE (Abhijit Saha):'
     print '    https://github.com/AbhijitSaha/Psearch'
     print 'PYTHON/CYTHON/C CODE (Kenenth Mighell):'
-    print '    https://github.com/AbhijitSaha/Psearch/psearch_py'
+    print '    https://github.com/AbhijitSaha/Psearch/tree/master/psearch_py'
     print '\nMODULE:'
     print '    %s' % os.path.abspath(__file__)
     print '    [psearch_py (%s)  mode: %s ]' % (__version__,msg)
