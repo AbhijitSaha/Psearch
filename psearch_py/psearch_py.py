@@ -15,7 +15,7 @@ except ImportError:
 # version information:
 from collections import namedtuple
 version_info = namedtuple('version_info','major minor micro')
-version_info = version_info(major=0,minor=19,micro=5) 
+version_info = version_info(major=0,minor=19,micro=9) 
 __version__ = '%d.%d.%d' % version_info
 
 
@@ -978,7 +978,7 @@ def fig_obs_kjm_py( hjd=None, mag=None, filts=None, filtnams=None, tag=None, \
         filtnams =  string array containing character names corresponding to
             coded filts values.  E.g., if you have 5 bands labeled u,g,r,i,z
             with filts values 0,1,2,3,4 respectively, filtnams would be set by:
-            filtnams = []'u', 'g', 'r', 'i', 'z']
+            filtnams = ['u', 'g', 'r', 'i', 'z']
         tag: String written in the bottom-left corner (if any)
         plotfile: filename of the output plot (if any)
     """
@@ -992,27 +992,42 @@ def fig_obs_kjm_py( hjd=None, mag=None, filts=None, filtnams=None, tag=None, \
     #DEBUG: print 'fig_obs_kjm: ','OK!  :-)'
     color = ['dodgerblue']  # matplotlib 1.5.0 color names
     nfilts = len(filtnams)
+    assert (nfilts >= 1)
     hjd0 = long(np.min(hjd))  # offset
     x = hjd - hjd0  # days from offset
     dx = max(0.08 * np.max(x),0.25)
     xlim = [-dx, (np.max(x)+dx)]
     xlabel = 'HJD - %d [days]' % hjd0
     dy = 0.5  # delta_mag
-    fig, axarr = plt.subplots( nfilts, sharex=True, figsize=(8.5,11) )
-    for i in xrange(nfilts):
-        fwant = float(i)
-        ok = (filts == fwant)
-        xx = x[ok]
-        yy = mag[ok]
-        axarr[i].scatter( xx, yy, color=color[0], alpha=0.5 )
-        axarr[i].set_xlim( xlim )  # all subplots have the same X-axis
+    if (nfilts > 1):
+        fig, axarr = plt.subplots( nfilts, sharex=True, figsize=(8.5,11) )
+        for i in xrange(nfilts):
+            fwant = float(i)
+            ok = (filts == fwant)
+            xx = x[ok]
+            yy = mag[ok]
+            axarr[i].scatter( xx, yy, color=color[0], alpha=0.5 )
+            axarr[i].set_xlim( xlim )  # all subplots have the same X-axis
+            # expand and flip Y-axis:
+            axarr[i].set_ylim( [(np.max(yy)+dy),(np.min(yy)-dy)] )
+            axarr[i].set_ylabel( 'mag', size='x-large' )
+            axarr[i].text( 0.97, 0.80, filtnams[i], ha='right', size='x-large',\
+                transform=axarr[i].transAxes ) 
+                # ^----- relative coordinates within subplot
+            if (i == (nfilts-1)):  # last subplot needs a label for the X-axis
+                axarr[i].set_xlabel( xlabel, size='x-large' )
+    else:
+        fig, ax = plt.subplots( nfilts, figsize=(8.5,11) )
+        xx = x[:]
+        yy = mag[:]
+        ax.scatter( xx, yy, color=color[0], alpha=0.5 )
+        ax.set_xlim( xlim )  
         # expand and flip Y-axis:
-        axarr[i].set_ylim( [(np.max(yy)+dy),(np.min(yy)-dy)] )
-        axarr[i].set_ylabel( 'mag', size='x-large' )
-        axarr[i].text( 0.97, 0.80, filtnams[i], ha='right', size='x-large', \
-            transform=axarr[i].transAxes ) # relative coordinates within subplot
-        if (i == (nfilts-1)):  # last subplot needs a label for the X-axis
-            axarr[i].set_xlabel( xlabel, size='x-large' )
+        ax.set_ylim( [(np.max(yy)+dy),(np.min(yy)-dy)] )
+        ax.set_ylabel( 'mag', size='x-large' )
+        ax.set_xlabel( xlabel, size='x-large' )
+        ax.text( 0.97, 0.90, filtnams[0], ha='right', size='x-large',\
+            transform=ax.transAxes ) 
     if (tag is not None):
         plt.figtext( 0.95, 0.1, tag, ha='right', va='bottom', color='grey', \
             size='large', rotation=90)
@@ -1047,32 +1062,44 @@ def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
     """
     assert (filtnams is not None)
     nfilts = len(filtnams)
+    assert (nfilts >= 1)
     assert isinstance(freq,np.ndarray)
     assert (freq.ndim == 1)
     ndata = len(freq)
     assert isinstance(psi_m,np.ndarray)
     psi_m_shape = psi_m.shape
-    assert (psi_m_shape[0] == nfilts)
-    assert (psi_m_shape[1] == ndata)
+    if (nfilts > 1):
+        assert (psi_m_shape[0] == nfilts)
+        assert (psi_m_shape[1] == ndata)
     assert isinstance(thresh_m,np.ndarray)
     assert (thresh_m.shape == psi_m_shape)
     #DEBUG: print 'fig_psi_kjm: ','OK!  :-)'
     color = ['dodgerblue','salmon']  # matplotlib 1.5.0 color names
-    fig, axarr = plt.subplots( nfilts+1, sharex=True, figsize=(8.5,11) )
-    for i in xrange(len(filtnams)):
-        axarr[i].plot( freq,    psi_m[i], color=color[0], zorder=0 )
-        axarr[i].plot( freq, thresh_m[i], color=color[1], zorder=10 )
-        axarr[i].set_ylabel( r'${\Psi}$', size=19 )
-        axarr[i].text( 0.97, 0.80, filtnams[i], ha='right', size='x-large', \
-            transform=axarr[i].transAxes ) # relative coordinates within subplot
-    # combine results for all filters
-    j = nfilts
-    axarr[j].plot( freq,    psi_m.sum(0), color=color[0], zorder=0 )
-    axarr[j].plot( freq, thresh_m.sum(0), color=color[1], zorder=10 )
-    axarr[j].set_ylabel( r'${\Psi}$', size=19 )
-    axarr[j].set_xlabel( r'Frequency [days${^{-1}}$]', size='x-large' )
-    axarr[j].text( 0.97, 0.80, 'ALL', ha='right', size='x-large', \
-        transform=axarr[j].transAxes ) # relative coordinates within subplot
+    if (nfilts > 1):
+        fig, axarr = plt.subplots( nfilts+1, sharex=True, figsize=(8.5,11) )
+        for i in xrange(len(filtnams)):
+            axarr[i].plot( freq,    psi_m[i], color=color[0], zorder=0 )
+            axarr[i].plot( freq, thresh_m[i], color=color[1], zorder=10 )
+            axarr[i].set_ylabel( r'${\Psi}$', size=19 )
+            axarr[i].text( 0.97, 0.80, filtnams[i], ha='right', size='x-large',\
+                transform=axarr[i].transAxes ) 
+                # ^---- relative coordinates within subplot
+        # combine results for all filters
+        j = nfilts
+        axarr[j].plot( freq,    psi_m.sum(0), color=color[0], zorder=0 )
+        axarr[j].plot( freq, thresh_m.sum(0), color=color[1], zorder=10 )
+        axarr[j].set_ylabel( r'${\Psi}$', size=19 )
+        axarr[j].set_xlabel( r'Frequency [days${^{-1}}$]', size='x-large' )
+        axarr[j].text( 0.97, 0.80, 'ALL', ha='right', size='x-large', \
+            transform=axarr[j].transAxes ) # relative coordinates within subplot
+    else:
+        fig, ax = plt.subplots( nfilts, figsize=(8.5,11) )
+        ax.plot( freq,    psi_m, color=color[0], zorder=0 )
+        ax.plot( freq, thresh_m, color=color[1], zorder=10 )
+        ax.set_ylabel( r'${\Psi}$', size=19 )
+        ax.set_xlabel( r'Frequency [days${^{-1}}$]', size='x-large' )
+        ax.text( 0.97, 0.90, filtnams[0], ha='right', size='x-large', \
+            transform=ax.transAxes ) # relative coordinates within subplot
     if (tag is not None):
         plt.figtext( 0.95, 0.1, tag, ha='right', va='bottom', color='grey', \
             size='large', rotation=90)
@@ -1118,34 +1145,55 @@ def fig_phi_kjm_py( hjd=None, mag=None, magerr=None, filts=None, filtnams=None,
     #DEBUG: print 'fig_phi_kjm: ','OK!  :-)'
     color = ['dodgerblue']  # matplotlib 1.5.0 color names
     nfilts = len(filtnams)
+    assert (nfilts >= 1)
     hjd0 = long(np.min(hjd))  # offset
     x = hjd - hjd0  # days from offset
     dx = 0.1
     xlim = [0.0-dx, 2.0+dx]
     xlabel = r'${\phi}$'
     dy = 0.5  # delta_mag
-    fig, axarr = plt.subplots( nfilts, sharex=True, figsize=(8.5,11) )
-    for i in xrange(nfilts):
-        fwant = float(i)
-        ok = (filts == fwant)
-        xx = x[ok]
-        yy = mag[ok]
-        ee = magerr[ok]
+    if (nfilts > 1):
+        fig, axarr = plt.subplots( nfilts, sharex=True, figsize=(8.5,11) )
+        for i in xrange(nfilts):
+            fwant = float(i)
+            ok = (filts == fwant)
+            xx = x[ok]
+            yy = mag[ok]
+            ee = magerr[ok]
+            phi0 = xx / period
+            nphi0 = phi0.astype(np.int64)
+            phi = phi0 - nphi0
+            axarr[i].errorbar(   phi, yy, yerr=ee, fmt='o', color=color[0], \
+                alpha=0.5 )
+            axarr[i].errorbar( phi+1, yy, yerr=ee, fmt='o', color=color[0], \
+                alpha=0.5 )
+            axarr[i].set_xlim( xlim )  # all subplots have the same X-axis
+            # expand and flip Y-axis:
+            axarr[i].set_ylim( [(np.max(yy+ee)+dy),(np.min(yy-ee)-dy)] )
+            axarr[i].set_ylabel( 'mag', size='x-large' )
+            axarr[i].text( 0.97, 0.80, filtnams[i], ha='right', size='x-large',\
+                transform=axarr[i].transAxes ) 
+                # ^---- relative coordinates within subplot
+            if (i == (nfilts-1)):  # last subplot needs a label for the X-axis
+                axarr[i].set_xlabel( xlabel, size=20 )
+    else:
+        fig, ax = plt.subplots( nfilts, sharex=True, figsize=(8.5,11) )
+        xx = x[:]
+        yy = mag[:]
+        ee = magerr[:]
         phi0 = xx / period
         nphi0 = phi0.astype(np.int64)
         phi = phi0 - nphi0
-        axarr[i].errorbar(   phi, yy, yerr=ee, fmt='o', color=color[0], \
-            alpha=0.5 )
-        axarr[i].errorbar( phi+1, yy, yerr=ee, fmt='o', color=color[0], \
-            alpha=0.5 )
-        axarr[i].set_xlim( xlim )  # all subplots have the same X-axis
+        ax.errorbar(   phi, yy, yerr=ee, fmt='o', color=color[0], alpha=0.5 )
+        ax.errorbar( phi+1, yy, yerr=ee, fmt='o', color=color[0], alpha=0.5 )
+        ax.set_xlim( xlim ) 
         # expand and flip Y-axis:
-        axarr[i].set_ylim( [(np.max(yy+ee)+dy),(np.min(yy-ee)-dy)] )
-        axarr[i].set_ylabel( 'mag', size='x-large' )
-        axarr[i].text( 0.97, 0.80, filtnams[i], ha='right', size='x-large', \
-            transform=axarr[i].transAxes ) # relative coordinates within subplot
-        if (i == (nfilts-1)):  # last subplot needs a label for the X-axis
-            axarr[i].set_xlabel( xlabel, size=20 )
+        ax.set_ylim( [(np.max(yy+ee)+dy),(np.min(yy-ee)-dy)] )
+        ax.set_ylabel( 'mag', size='x-large' )
+        ax.set_xlabel( xlabel, size=20 )
+        ax.text( 0.97, 0.90, filtnams[0], ha='right', size='x-large',\
+            transform=ax.transAxes ) 
+            # ^---- relative coordinates within subplot
     plt.figtext( 0.5, 0.93, 'Period: %9.6f days' % period, ha='center', \
          color='black', size='xx-large' )
     if (tag is not None):
