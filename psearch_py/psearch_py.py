@@ -15,7 +15,7 @@ except ImportError:
 # version information:
 from collections import namedtuple
 version_info = namedtuple('version_info','major minor micro')
-version_info = version_info(major=0,minor=19,micro=9) 
+version_info = version_info(major=0,minor=21,micro=4)
 __version__ = '%d.%d.%d' % version_info
 
 
@@ -64,8 +64,12 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
             are computed.  It is the same for ALL bands/channels.
         psi_m: M x N array of the Psi periodogram, where M is the number of
             bands/channels in the input array filtnams
+            N.B. if only one filter is used, 
+                 psi_m is a 1d array (vector) of N elements
         thresh_m: M x N array containing threshold values of Psi at each period
             and band for assessing significance for psi_m
+             N.B. if only one filter is used, 
+                 thresh_m is a 1d array (vector) of N elements
 
     ORIGINAL IDL DEFINITION:
         pro Psearch, hjd, mag, magerr, filts, filtnams, pmin, dphi, ptest, $
@@ -88,6 +92,7 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
     print '\nREFERENCE:'
     reference()
     nfilts = len(filtnams)
+    assert (nfilts >= 1)
     psiacc = 0.
     confacc = 0.
     for i in xrange(nfilts):
@@ -105,15 +110,19 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
         table_psi_kjm_py( xx=x, yy=psi, ee=conf, n=10)
         psiacc = psi + psiacc
         confacc = conf + confacc
-    print ' '
-    print '========== ALL FILTERS ========== '
-    print ' '
-    table_psi_kjm_py( xx=x, yy=psiacc, ee=confacc, n=10)
+    if (nfilts == 1):
+        psi_m = psi_m.flatten()
+        thresh_m = thresh_m.flatten()
+    else:
+        print ' '
+        print '========== ALL FILTERS ========== '
+        print ' '
+        table_psi_kjm_py( xx=x, yy=psiacc, ee=confacc, n=10)
     ptest = x
     print '\nReference:'
     reference()
     print 'psearch: END ======================================================='
-    return ptest, psi_m, thresh_m  #KJM
+    return ptest, psi_m, thresh_m
 
 
 def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
@@ -965,7 +974,7 @@ def table_psi_kjm_py( xx=None, yy=None, ee=None, n=None):
 
 
 def fig_obs_kjm_py( hjd=None, mag=None, filts=None, filtnams=None, tag=None, \
-    plotfile=None ):
+    plotfile=None, xlim=None ):
     """
     NAME:
         fig_obs_kjm_py
@@ -981,6 +990,7 @@ def fig_obs_kjm_py( hjd=None, mag=None, filts=None, filtnams=None, tag=None, \
             filtnams = ['u', 'g', 'r', 'i', 'z']
         tag: String written in the bottom-left corner (if any)
         plotfile: filename of the output plot (if any)
+        xlim: user-defined limits of the x-axis (if any)
     """
     assert isinstance(hjd,np.ndarray)
     assert (hjd.ndim == 1)
@@ -996,7 +1006,8 @@ def fig_obs_kjm_py( hjd=None, mag=None, filts=None, filtnams=None, tag=None, \
     hjd0 = long(np.min(hjd))  # offset
     x = hjd - hjd0  # days from offset
     dx = max(0.08 * np.max(x),0.25)
-    xlim = [-dx, (np.max(x)+dx)]
+    if xlim is None:
+        xlim = [-dx, (np.max(x)+dx)]
     xlabel = 'HJD - %d [days]' % hjd0
     dy = 0.5  # delta_mag
     if (nfilts > 1):
@@ -1018,8 +1029,10 @@ def fig_obs_kjm_py( hjd=None, mag=None, filts=None, filtnams=None, tag=None, \
                 axarr[i].set_xlabel( xlabel, size='x-large' )
     else:
         fig, ax = plt.subplots( nfilts, figsize=(8.5,11) )
-        xx = x[:]
-        yy = mag[:]
+        fwant = float(0)
+        ok = (filts == fwant)
+        xx = x[ok]
+        yy = mag[ok]
         ax.scatter( xx, yy, color=color[0], alpha=0.5 )
         ax.set_xlim( xlim )  
         # expand and flip Y-axis:
@@ -1041,7 +1054,7 @@ def fig_obs_kjm_py( hjd=None, mag=None, filts=None, filtnams=None, tag=None, \
 
 
 def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
-        tag=None, plotfile=None):
+        tag=None, plotfile=None, ylim=None ):
     """
     NAME:
         fig_psi_kjm_py
@@ -1059,6 +1072,7 @@ def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
             filtnams = ['u', 'g', 'r', 'i', 'z']
         tag: String written in the bottom-left corner (if any)
         plotfile: filename of the output plot (if any)
+        ylim: user-defined limits of the y-axis (if any)
     """
     assert (filtnams is not None)
     nfilts = len(filtnams)
@@ -1080,6 +1094,8 @@ def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
         for i in xrange(len(filtnams)):
             axarr[i].plot( freq,    psi_m[i], color=color[0], zorder=0 )
             axarr[i].plot( freq, thresh_m[i], color=color[1], zorder=10 )
+            if ylim is not None:
+                axarr[i].set_ylim( ylim )
             axarr[i].set_ylabel( r'${\Psi}$', size=19 )
             axarr[i].text( 0.97, 0.80, filtnams[i], ha='right', size='x-large',\
                 transform=axarr[i].transAxes ) 
@@ -1088,6 +1104,8 @@ def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
         j = nfilts
         axarr[j].plot( freq,    psi_m.sum(0), color=color[0], zorder=0 )
         axarr[j].plot( freq, thresh_m.sum(0), color=color[1], zorder=10 )
+        if ylim is not None:
+            axarr[j].set_ylim( ylim )
         axarr[j].set_ylabel( r'${\Psi}$', size=19 )
         axarr[j].set_xlabel( r'Frequency [days${^{-1}}$]', size='x-large' )
         axarr[j].text( 0.97, 0.80, 'ALL', ha='right', size='x-large', \
@@ -1096,6 +1114,8 @@ def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
         fig, ax = plt.subplots( nfilts, figsize=(8.5,11) )
         ax.plot( freq,    psi_m, color=color[0], zorder=0 )
         ax.plot( freq, thresh_m, color=color[1], zorder=10 )
+        if ylim is not None:
+            ax.set_ylim( ylim )
         ax.set_ylabel( r'${\Psi}$', size=19 )
         ax.set_xlabel( r'Frequency [days${^{-1}}$]', size='x-large' )
         ax.text( 0.97, 0.90, filtnams[0], ha='right', size='x-large', \
@@ -1178,9 +1198,11 @@ def fig_phi_kjm_py( hjd=None, mag=None, magerr=None, filts=None, filtnams=None,
                 axarr[i].set_xlabel( xlabel, size=20 )
     else:
         fig, ax = plt.subplots( nfilts, sharex=True, figsize=(8.5,11) )
-        xx = x[:]
-        yy = mag[:]
-        ee = magerr[:]
+        fwant = float(0)
+        ok = (filts == fwant)
+        xx = x[ok]
+        yy = mag[ok]
+        ee = magerr[ok]
         phi0 = xx / period
         nphi0 = phi0.astype(np.int64)
         phi = phi0 - nphi0
@@ -1222,8 +1244,8 @@ def do_stats( x, tag=None ):
     
 def plot_absdiff_py( fy0_p, fy1_p, title_p ):
     print '\n========== ',title_p,' =========='
-    fy0 = fy0_p[:]
-    fy1 = fy1_p[:]
+    fy0 = fy0_p.copy() 
+    fy1 = fy1_p.copy() 
     fdy = (fy1 - fy0)
     fady = np.absolute(fdy)
     fn = len(fy0)
@@ -1281,12 +1303,12 @@ def main():
         sys.stdout.write("Sorry, requires Python 2.X, not Python 3.X\n")
         sys.exit(1)
 
-    # Get some data
+    # get some data
     ifile = 'B1392all.tab'
     hjd_, mag_, magerr_, filts_ = np.loadtxt( ifile, unpack=True)[:4]
     
     row= np.arange(len(hjd_))
-    bad = (magerr_ > 0.2) | (magerr_ <= 0.)
+    bad = (magerr_ > 0.2) | (magerr_ < 0.)
     nbad = np.count_nonzero(bad)
     if (nbad>0):
         print '\nFound ',nbad,' bad observations:'
@@ -1317,12 +1339,13 @@ def main():
     magerr = magerr0[idx]
     filts  = filts0[idx]
 
-    # Set pmin, dphi, and filtnams
+    # set pmin, dphi, and filtnams
     pmin = .2
     dphi = 0.02
     filtnams = ['u', 'g', 'r', 'i', 'z']
     #filtnams = ['u', 'g']
-
+    #filtnams = ['u']
+    
     # And away we go!
     time00 = tm.time()
     periods, psi_m, thresh_m = \
@@ -1331,26 +1354,33 @@ def main():
 
     tag = ifile+'     '+'%7.2f%%' % (prob_cut*100.0)  # extra info for plots
 
-    # Plot HJD vs. magnitude for all filters
+    # plot HJD vs. magnitude for all filters
     plot1 = 'psearch_fig_obs.png'
-    fig_obs_kjm_py( hjd, mag, filts, filtnams, tag=tag, plotfile=plot1)
+    fig_obs_kjm_py( hjd, mag, filts, filtnams, tag=tag, plotfile=plot1 )
 
     # Plot Psi vs. Frequency for all filters
     plot2 = 'psearch_fig_psi.png'
     fig_psi_kjm_py( 1/periods, psi_m, thresh_m, filtnams, tag=tag,
         plotfile=plot2 )
 
-    # Period of the strongest peak of the combined Psi distribution
-    idx = np.argmax(psi_m.sum(0))
+    # period of the strongest peak of the combined Psi distribution
+    nfilts = len(filtnams)
+    if (nfilts > 1):
+        psi_sum = psi_m.sum(0)
+        thresh_sum = thresh_m.sum(0)
+    else:
+        psi_sum = psi_m
+        thresh_sum = thresh_m
+    idx = np.argmax(psi_sum) 
     p_peak = periods[idx]
     
-    # Plot phased light curves for all filters
+    # plot phased light curves for all filters
     plot3 = 'psearch_fig_phi.png'
     fig_phi_kjm_py( hjd, mag, magerr, filts, filtnams, period=p_peak, \
         tag=tag, plotfile=plot3 )
 
-    # Show the top 10 peaks of the combined Psi distribution
-    #table_psi_kjm_py( xx=periods, yy=psi_m.sum(0), ee=thresh_m.sum(0), n=10 )
+    # show the top 10 peaks of the combined Psi distribution
+    #table_psi_kjm_py( xx=periods, yy=psi_sum, ee=thresh_sum, n=10 )
 
     # Show the plotfiles (if using a Mac)
     show_plot_on_mac(plot1)
