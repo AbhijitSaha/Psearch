@@ -15,7 +15,7 @@ except ImportError:
 # version information:
 from collections import namedtuple
 version_info = namedtuple('version_info','major minor micro')
-version_info = version_info(major=0,minor=21,micro=4)
+version_info = version_info(major=0,minor=21,micro=15)
 __version__ = '%d.%d.%d' % version_info
 
 
@@ -38,7 +38,7 @@ def reference():
     return
 
 
-def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
+def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi, n_thresh=1):
     """
     NAME:
         psearch_py
@@ -58,6 +58,7 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
         dphi: Maximum change in relative phase between first and last epoch to
             be permitted when stepping to next test period.
             E.g., dphi = 0.02
+        n_thresh: Number of simulated error runs (default=1,min=0)
 
     OUTPUTS:
         ptest: 1-D array with N dimensions of periods for which the periodograms
@@ -88,6 +89,7 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
     assert isinstance(filts,np.ndarray)
     assert (filts.dtype == np.float64)
     assert (filts.shape == hjd_shape)
+    assert (n_thresh >= 0)
     print 'psearch: BEGIN ====================================================='
     print '\nREFERENCE:'
     reference()
@@ -99,7 +101,7 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
         fwant = i
         print 'psearch: ',filtnams[fwant],' filter'
         x, fy, theta, psi, conf = periodpsi2_py( hjd, mag, magerr, filts, \
-            pmin, dphi, fwant )
+            pmin, dphi, fwant, n_thresh=n_thresh )
         if (i == 0):
             # define the output arrays
             # -- needs size of period array from 1st band call to periodpsi2
@@ -125,7 +127,7 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi):
     return ptest, psi_m, thresh_m
 
 
-def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
+def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant, n_thresh=1 ):
     """
     NAME:
         periodpsi2_py
@@ -141,6 +143,7 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
             one step in frequency or period
         fwant: integer value corresponding to desired passband from among values
             in filts array.
+        n_thresh: Number of simulated error runs (default=1,min=0)
 
     OUTPUTS: 
         x: period array for which periodograms are computed
@@ -173,32 +176,36 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
     assert isinstance(filts,np.ndarray)
     assert (filts.dtype == np.float64)
     assert (filts.shape == hjd_shape)
+    assert (n_thresh >= 0)
+    #
     t0 = np.min(hjd)
     tmax = np.max(hjd)
     tspan = tmax - t0
-    ok = (filts == fwant) & (magerr <= 0.2)
-    tr = hjd[ok]
-    nok = len(tr)
-    print 'periodpsi2: ',len(tr),' observations'
-    yr = mag[ok]
-    er = magerr[ok]*np.random.normal(0.,1.,nok)
-    #amp = max(yr)-min(yr)  #UNUSED?  [KJM]
-    zr = scramble_py( yr )[0]  # get only the first output
-    sss = np.argsort(tr)  #BEWARE of the IDL sort() gotcha!
-    tr = tr[sss]
-    yr = yr[sss]
-    er = er[sss]
     maxfreq = 1./minper
     minfreq = 2./tspan
     deltafreq = dphi/tspan
     nfreq = int( (maxfreq-minfreq)/deltafreq )
-    #DEBUG: 
     print 'periodpsi2: number of frequency samples = ', nfreq
     farray = minfreq + np.arange(nfreq)*deltafreq
     x = 1./farray
-    #DEBUG: print 'periodpsi2: minimum and maximum periods: ', min(x), max(x)
+    print 'periodpsi2: minimum and maximum periods: %10.3f %10.3f' % \
+      (min(x), max(x))
     omega = farray * 2.0 * np.pi
+    #
+    ok = (filts == fwant) & (magerr <= 0.2) & (magerr >= 0.0)
+    tr = hjd[ok]
+    nok = len(tr)
+    print 'periodpsi2: ',nok,' observations'
+    yr = mag[ok]
+    yr_err = magerr[ok]
+    sss = np.argsort(tr) 
+    tr = tr[sss]
+    yr = yr[sss]
+    yr_err = yr_err[sss]
 
+################################################################################
+########## psi #################################################################
+################################################################################
     time20 = tm.time()
     #om, fy = scargle_py( tr, yr, omega=omega, nfreq=nfreq, old=False )[:2]
     #fy = scargle_fast_py( tr, yr, omega, nfreq )
@@ -216,48 +223,6 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
         if (not ok1):
             print '^--- FY NOT OK!\n'
             plot_absdiff_py( fy_, fy, 'FY' )
-
-    time20   = tm.time()
-    #om, fe = scargle_py( tr, er, omega=omega, nfreq=nfreq, old=False )[:2]
-    #fe = scargle_fast_py( tr, er, omega, nfreq )
-    #fe = psearch_pyc.scargle_fast( tr, er, omega, nfreq )
-    if (cythonc):
-        fe = psearch_pyc.scargle_fast( tr, er, omega, nfreq ) 
-    else:
-        fe = scargle_fast_py( tr, er, omega, nfreq )
-    time21   = tm.time()
-    print 'scargle: DONE  %8.3f seconds' % (time21-time20)
-    if (debug1):
-        om_, fe_ = scargle_py( tr, er, omega=omega, nfreq=nfreq, old=False )[:2]
-        print np.allclose(fe,fe_),'=np.allclose(fe,fe_)'
-        ok2 = np.allclose(fe,fe_)
-        if (not ok2):
-            print '^--- FE NOT OK!\n'
-            plot_absdiff_py( fe_, fe, 'FE' )
-
-    time20   = tm.time()
-    #om, fz = scargle_py( tr, zr, omega=omega, nfreq=nfreq, old=False )[:2]
-    #fz = scargle_fast_py( tr, zr, omega, nfreq )
-    #fz = psearch_pyc.scargle_fast( tr, zr, omega, nfreq )
-    if (cythonc):
-        fz = psearch_pyc.scargle_fast( tr, zr, omega, nfreq ) 
-    else:
-        fz = scargle_fast_py( tr, zr, omega, nfreq )
-    time21   = tm.time()
-    print 'scargle: DONE  %8.3f seconds' % (time21-time20)
-    if (debug1):
-        om_, fz_ = scargle_py( tr, zr, omega=omega, nfreq=nfreq, old=False )[:2]
-        print np.allclose(fz,fz_),'=np.allclose(fz,fz_)'
-        ok3 = np.allclose(fz,fz_)
-        if (not ok3):
-            print '^--- FZ NOT OK!\n'
-            plot_absdiff_py( fz_, fz, 'FZ' )
-
-    if (debug1):
-        ok = ok1 and ok2 and ok3
-        if (not ok):
-            print '***** ERROR ************ RESULTS ARE NOT CLOSE!  :-(\n\n'
-    
     time20 = tm.time()
     #theta = ctheta_slave_py(x, yr, tr, version=1)
     #theta = ctheta_slave_py(x, yr, tr)
@@ -273,60 +238,113 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant ):
     if (debug2):
         theta_ = ctheta_slave_py(x, yr, tr, version=1)
         print np.allclose(theta,theta_),'=np.allclose(theta,theta_)'
-        ok1 = np.allclose(theta,theta_)
-        if (not ok1):
+        ok4 = np.allclose(theta,theta_)
+        if (not ok4):
             print '^--- THETA NOT OK!\n'
             plot_absdiff_py( theta_, theta, 'THETA' )
-
-    time20   = tm.time()
-    #thetaerr = ctheta_slave_py(x, er, tr, version=1)
-    #thetaerr = ctheta_slave_py(x, er, tr)
-    #thetaerr = ctheta_slave_v3_pyjit(x, er, tr)
-    #thetaerr = psearch_pyc.ctheta_slave(x, er, tr)
-    if (cythonc):
-        thetaerr = psearch_pyc.ctheta_slave(x, er, tr)
-    else:
-        thetaerr = ctheta_slave_v3_pyjit(x, er, tr)
-    time21   = tm.time()
-    print 'ctheta_slave: DONE  %8.3f seconds' % (time21-time20)
-    if (debug2):
-        thetaerr_ = ctheta_slave_py(x, er, tr, version=1)
-        print np.allclose(thetaerr,thetaerr_),'=np.allclose(thetaerr,thetaerr_)'
-        ok2 = np.allclose(thetaerr,thetaerr_)
-        if (not ok2):
-            print '^--- THETAERR NOT OK!\n'
-            plot_absdiff_py( thetaerr_, thetaerr, 'THETAERR' )
-
-    time20   = tm.time()
-    #thetaz   = ctheta_slave_py(x, zr, tr, version=1)
-    #thetaz   = ctheta_slave_py(x, zr, tr)
-    #thetaz   = ctheta_slave_v3_pyjit(x, zr, tr)
-    #thetaz   = psearch_pyc.ctheta_slave(x, zr, tr)
-    if (cythonc):
-        thetaz = psearch_pyc.ctheta_slave(x, zr, tr)
-    else:
-        thetaz = ctheta_slave_v3_pyjit(x, zr, tr)
-    time21   = tm.time()
-    print 'ctheta_slave: DONE  %8.3f seconds' % (time21-time20)
-    if (debug2):
-        thetaz_ = ctheta_slave_py(x, zr, tr, version=1)
-        print np.allclose(thetaz,thetaz_),'=np.allclose(thetaz,thetaz_)'
-        ok3 = np.allclose(thetaz,thetaz_)
-        if (not ok3):
-            print '^--- THETAZ NOT OK!\n'
-            plot_absdiff_py( thetaz_, thetaz, 'THETAZ' )
-
-    if (debug2):
-        ok = ok1 and ok2 and ok3
-        if (not ok):
-            print '***** ERROR ************ RESULTS ARE NOT CLOSE!  :-(\n\n'
-
     psi = 2.*fy/theta
-    conf1 = 2.*fe/thetaerr
-    conf1 = conf1*np.sum(psi)/np.sum(conf1)
-    conf2 = 2.*fz/thetaz
-    conf2 = conf2*np.sum(psi)/np.sum(conf2)
+################################################################################
+################################################################################
+################################################################################
+ 
+    conf1 = np.zeros_like( psi )
+    conf2 = np.zeros_like( psi )
+    count = 0
+    while (count < n_thresh):
+        count += 1
+        print 'periodpsi2_py: ',count,' of ',n_thresh,'  (thresh loop)'
+        ########################################################################
+        ########## conf1 #######################################################
+        ########################################################################    
+        er = yr_err*np.random.normal(0.,1.,nok)
+        time20   = tm.time()
+        #om, fe = scargle_py( tr, er, omega=omega, nfreq=nfreq, old=False )[:2]
+        #fe = scargle_fast_py( tr, er, omega, nfreq )
+        #fe = psearch_pyc.scargle_fast( tr, er, omega, nfreq )
+        if (cythonc):
+            fe = psearch_pyc.scargle_fast( tr, er, omega, nfreq ) 
+        else:
+            fe = scargle_fast_py( tr, er, omega, nfreq )
+        time21   = tm.time()
+        print 'scargle: DONE  %8.3f seconds' % (time21-time20)
+        if (debug1):
+            om_, fe_ = scargle_py( tr, er, omega=omega, nfreq=nfreq, old=False )[:2]
+            print np.allclose(fe,fe_),'=np.allclose(fe,fe_)'
+            ok2 = np.allclose(fe,fe_)
+            if (not ok2):
+                print '^--- FE NOT OK!\n'
+                plot_absdiff_py( fe_, fe, 'FE' )
+        time20   = tm.time()
+        #thetaerr = ctheta_slave_py(x, er, tr, version=1)
+        #thetaerr = ctheta_slave_py(x, er, tr)
+        #thetaerr = ctheta_slave_v3_pyjit(x, er, tr)
+        #thetaerr = psearch_pyc.ctheta_slave(x, er, tr)
+        if (cythonc):
+            thetaerr = psearch_pyc.ctheta_slave(x, er, tr)
+        else:
+            thetaerr = ctheta_slave_v3_pyjit(x, er, tr)
+        time21   = tm.time()
+        print 'ctheta_slave: DONE  %8.3f seconds' % (time21-time20)
+        if (debug2):
+            thetaerr_ = ctheta_slave_py(x, er, tr, version=1)
+            print np.allclose(thetaerr,thetaerr_),\
+              '=np.allclose(thetaerr,thetaerr_)'
+            ok5 = np.allclose(thetaerr,thetaerr_)
+            if (not ok5):
+                print '^--- THETAERR NOT OK!\n'
+                plot_absdiff_py( thetaerr_, thetaerr, 'THETAERR' )
+        conf1a = 2.*fe/thetaerr
+        conf1b = conf1a*np.sum(psi)/np.sum(conf1a)
+        conf1 = np.maximum(conf1,conf1b)
+        ########################################################################
+        ########## conf2 #######################################################
+        ########################################################################
+        zr, _ = scramble_py( yr )
+        time20   = tm.time()
+        #om, fz = scargle_py( tr, zr, omega=omega, nfreq=nfreq, old=False )[:2]
+        #fz = scargle_fast_py( tr, zr, omega, nfreq )
+        #fz = psearch_pyc.scargle_fast( tr, zr, omega, nfreq )
+        if (cythonc):
+            fz = psearch_pyc.scargle_fast( tr, zr, omega, nfreq ) 
+        else:
+            fz = scargle_fast_py( tr, zr, omega, nfreq )
+        time21   = tm.time()
+        print 'scargle: DONE  %8.3f seconds' % (time21-time20)
+        if (debug1):
+            om_, fz_ = scargle_py( tr, zr, omega=omega, nfreq=nfreq,\
+              old=False )[:2]
+            print np.allclose(fz,fz_),'=np.allclose(fz,fz_)'
+            ok3 = np.allclose(fz,fz_)
+            if (not ok3):
+                print '^--- FZ NOT OK!\n'
+                plot_absdiff_py( fz_, fz, 'FZ' )
+        time20   = tm.time()
+        #thetaz   = ctheta_slave_py(x, zr, tr, version=1)
+        #thetaz   = ctheta_slave_py(x, zr, tr)
+        #thetaz   = ctheta_slave_v3_pyjit(x, zr, tr)
+        #thetaz   = psearch_pyc.ctheta_slave(x, zr, tr)
+        if (cythonc):
+            thetaz = psearch_pyc.ctheta_slave(x, zr, tr)
+        else:
+            thetaz = ctheta_slave_v3_pyjit(x, zr, tr)
+        time21   = tm.time()
+        print 'ctheta_slave: DONE  %8.3f seconds' % (time21-time20)
+        if (debug2):
+            thetaz_ = ctheta_slave_py(x, zr, tr, version=1)
+            print np.allclose(thetaz,thetaz_),'=np.allclose(thetaz,thetaz_)'
+            ok6 = np.allclose(thetaz,thetaz_)
+            if (not ok6):
+                print '^--- THETAZ NOT OK!\n'
+                plot_absdiff_py( thetaz_, thetaz, 'THETAZ' )    
+        conf2a = 2.*fz/thetaz
+        conf2b = conf2a*np.sum(psi)/np.sum(conf2a)
+        conf2 = np.maximum(conf2,conf2b)
+        ########################################################################
+        ########################################################################
+        ########################################################################
+
     conf = conf1 + conf2
+
     print 'periodpsi2: END'
     return x, fy, theta, psi, conf
 
@@ -1054,7 +1072,7 @@ def fig_obs_kjm_py( hjd=None, mag=None, filts=None, filtnams=None, tag=None, \
 
 
 def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
-        tag=None, plotfile=None, ylim=None ):
+        tag=None, plotfile=None, ylim=None, verbose=False ):
     """
     NAME:
         fig_psi_kjm_py
@@ -1073,6 +1091,7 @@ def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
         tag: String written in the bottom-left corner (if any)
         plotfile: filename of the output plot (if any)
         ylim: user-defined limits of the y-axis (if any)
+        verbose: show frequency/period table (default=False)
     """
     assert (filtnams is not None)
     nfilts = len(filtnams)
@@ -1087,39 +1106,62 @@ def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
         assert (psi_m_shape[1] == ndata)
     assert isinstance(thresh_m,np.ndarray)
     assert (thresh_m.shape == psi_m_shape)
-    #DEBUG: print 'fig_psi_kjm: ','OK!  :-)'
+    periods = 1.0/freq
     color = ['dodgerblue','salmon']  # matplotlib 1.5.0 color names
+    if (verbose):
+        print '  filter :          Psi   Frequency   Period[days]'
     if (nfilts > 1):
         fig, axarr = plt.subplots( nfilts+1, sharex=True, figsize=(8.5,11) )
         for i in xrange(len(filtnams)):
             axarr[i].plot( freq,    psi_m[i], color=color[0], zorder=0 )
-            axarr[i].plot( freq, thresh_m[i], color=color[1], zorder=10 )
+            if (np.any(thresh_m[i])):
+                axarr[i].plot( freq, thresh_m[i], color=color[1], zorder=10 )
             if ylim is not None:
                 axarr[i].set_ylim( ylim )
             axarr[i].set_ylabel( r'${\Psi}$', size=19 )
             axarr[i].text( 0.97, 0.80, filtnams[i], ha='right', size='x-large',\
                 transform=axarr[i].transAxes ) 
                 # ^---- relative coordinates within subplot
+            idx = np.argmax(psi_m[i]) 
+            freq_peak = freq[idx]
+            period_peak = periods[idx]
+            if (verbose):
+                print '%8s : %12.2f %11.6f %12.7f' %\
+                  (filtnams[i],psi_m[i][idx],freq_peak,period_peak)
         # combine results for all filters
         j = nfilts
         axarr[j].plot( freq,    psi_m.sum(0), color=color[0], zorder=0 )
-        axarr[j].plot( freq, thresh_m.sum(0), color=color[1], zorder=10 )
+        if (np.any(thresh_m.sum(0))):
+            axarr[j].plot( freq, thresh_m.sum(0), color=color[1], zorder=10 )
         if ylim is not None:
             axarr[j].set_ylim( ylim )
         axarr[j].set_ylabel( r'${\Psi}$', size=19 )
         axarr[j].set_xlabel( r'Frequency [days${^{-1}}$]', size='x-large' )
         axarr[j].text( 0.97, 0.80, 'ALL', ha='right', size='x-large', \
             transform=axarr[j].transAxes ) # relative coordinates within subplot
+        idx = np.argmax(psi_m.sum(0)) 
+        freq_peak = freq[idx]
+        period_peak = periods[idx]
+        if (verbose):
+            print '%8s : %12.2f %11.6f %12.7f' %\
+              ('ALL',psi_m.sum(0)[idx],freq_peak,period_peak)
     else:
         fig, ax = plt.subplots( nfilts, figsize=(8.5,11) )
         ax.plot( freq,    psi_m, color=color[0], zorder=0 )
-        ax.plot( freq, thresh_m, color=color[1], zorder=10 )
+        if (np.any(thresh_m)):
+            ax.plot( freq, thresh_m, color=color[1], zorder=10 )
         if ylim is not None:
             ax.set_ylim( ylim )
         ax.set_ylabel( r'${\Psi}$', size=19 )
         ax.set_xlabel( r'Frequency [days${^{-1}}$]', size='x-large' )
         ax.text( 0.97, 0.90, filtnams[0], ha='right', size='x-large', \
             transform=ax.transAxes ) # relative coordinates within subplot
+        idx = np.argmax(psi_m) 
+        freq_peak = freq[idx]
+        period_peak = periods[idx]
+        if (verbose):
+            print '%8s : %12.2f %11.6f %12.7f' %\
+              (filtnams[0],psi_m[idx],freq_peak,period_peak)
     if (tag is not None):
         plt.figtext( 0.95, 0.1, tag, ha='right', va='bottom', color='grey', \
             size='large', rotation=90)
@@ -1257,8 +1299,8 @@ def plot_absdiff_py( fy0_p, fy1_p, title_p ):
     nok = ~idx
     gx = fx[ok]
     gy0 = fy0[ok]
-    gy1 = fy1[ok]
-    gdy = fdy[ok]
+    #gy1 = fy1[ok]
+    #gdy = fdy[ok]
     gady = fady[ok]
     gn = len(gy0)
     hn = 0  # initialize
@@ -1267,8 +1309,8 @@ def plot_absdiff_py( fy0_p, fy1_p, title_p ):
         do_stats( gady, tag=title_p+'  ' )
         hx = fx[nok]
         hy0 = fy0[nok]
-        hy1 = fy1[nok]
-        hdy = fdy[nok]
+        #hy1 = fy1[nok]
+        #hdy = fdy[nok]
         hady = fady[nok]
         hn = len(hy0)
         if (hn > 0):
@@ -1297,7 +1339,7 @@ def show_plot_on_mac(plotfile=None):
 def main():
     import numpy as np
     import time as tm
-    import sys
+    #import sys
 
     if (sys.version_info >= (3, 0)):
         sys.stdout.write("Sorry, requires Python 2.X, not Python 3.X\n")
@@ -1332,6 +1374,7 @@ def main():
 
     prob_cut = 1.000  # 100% --> all the data
     #prob_cut = 0.5    #  50% --> half of the data
+    #prob_cut = 0.25    #  50% --> half of the data
     prob = np.random.rand( len(hjd0) )
     idx = (prob <= prob_cut)
     hjd    = hjd0[idx]
@@ -1352,7 +1395,8 @@ def main():
         psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi )
     time01 = tm.time()
 
-    tag = ifile+'     '+'%7.2f%%' % (prob_cut*100.0)  # extra info for plots
+    # extra info for plots:
+    tag = ifile+'     '+'%7.2f%%' % (prob_cut*100.0)
 
     # plot HJD vs. magnitude for all filters
     plot1 = 'psearch_fig_obs.png'
@@ -1361,16 +1405,14 @@ def main():
     # Plot Psi vs. Frequency for all filters
     plot2 = 'psearch_fig_psi.png'
     fig_psi_kjm_py( 1/periods, psi_m, thresh_m, filtnams, tag=tag,
-        plotfile=plot2 )
+        plotfile=plot2, verbose=True )
 
     # period of the strongest peak of the combined Psi distribution
     nfilts = len(filtnams)
     if (nfilts > 1):
         psi_sum = psi_m.sum(0)
-        thresh_sum = thresh_m.sum(0)
     else:
         psi_sum = psi_m
-        thresh_sum = thresh_m
     idx = np.argmax(psi_sum) 
     p_peak = periods[idx]
     
@@ -1380,6 +1422,10 @@ def main():
         tag=tag, plotfile=plot3 )
 
     # show the top 10 peaks of the combined Psi distribution
+    #if (nfilts > 1):
+    #    thresh_sum = thresh_m.sum(0)
+    #else:
+    #    thresh_sum = thresh_m
     #table_psi_kjm_py( xx=periods, yy=psi_sum, ee=thresh_sum, n=10 )
 
     # Show the plotfiles (if using a Mac)
@@ -1387,7 +1433,7 @@ def main():
     show_plot_on_mac(plot2)
     show_plot_on_mac(plot3)
 
-    print '\nPeriod: %9.6f' % p_peak
+    print '\nPeriod: %9.6f days' % p_peak
 
     print '\nmain: %8.3f seconds [walltime for psearch_py]' % (time01-time00)
     print("\nmain: That's all folks!  :-)")
