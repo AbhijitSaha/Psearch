@@ -15,7 +15,7 @@ except ImportError:
 # version information:
 from collections import namedtuple
 version_info = namedtuple('version_info','major minor micro')
-version_info = version_info(major=0,minor=21,micro=15)
+version_info = version_info(major=0,minor=21,micro=16)
 __version__ = '%d.%d.%d' % version_info
 
 
@@ -185,10 +185,10 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant, n_thresh=1 ):
     minfreq = 2./tspan
     deltafreq = dphi/tspan
     nfreq = int( (maxfreq-minfreq)/deltafreq )
-    print 'periodpsi2: number of frequency samples = ', nfreq
+    print 'periodpsi2: number of frequency samples: ', nfreq
     farray = minfreq + np.arange(nfreq)*deltafreq
     x = 1./farray
-    print 'periodpsi2: minimum and maximum periods: %10.3f %10.3f' % \
+    print 'periodpsi2: minimum and maximum periods: %13.7f %13.7f' % \
       (min(x), max(x))
     omega = farray * 2.0 * np.pi
     #
@@ -1137,8 +1137,9 @@ def fig_psi_kjm_py( freq=None, psi_m=None, thresh_m=None, filtnams=None, \
             axarr[j].set_ylim( ylim )
         axarr[j].set_ylabel( r'${\Psi}$', size=19 )
         axarr[j].set_xlabel( r'Frequency [days${^{-1}}$]', size='x-large' )
-        axarr[j].text( 0.97, 0.80, 'ALL', ha='right', size='x-large', \
-            transform=axarr[j].transAxes ) # relative coordinates within subplot
+        axarr[j].text( 0.985, 0.80, 'ALL', ha='right', size='x-large', \
+            transform=axarr[j].transAxes ) 
+            # ^----- relative coordinates within subplot
         idx = np.argmax(psi_m.sum(0)) 
         freq_peak = freq[idx]
         period_peak = periods[idx]
@@ -1382,17 +1383,23 @@ def main():
     magerr = magerr0[idx]
     filts  = filts0[idx]
 
-    # set pmin, dphi, and filtnams
+    # set pmin, dphi, filtnams, and n_thresh:
     pmin = .2
     dphi = 0.02
-    filtnams = ['u', 'g', 'r', 'i', 'z']
-    #filtnams = ['u', 'g']
-    #filtnams = ['u']
-    
+    #
+    filtnams = ['u', 'g', 'r', 'i', 'z']  # all five filters
+    #filtnams = ['u', 'g']  # first two filters
+    #filtnams = ['u']  # only first filter
+    #
+    n_thresh = 1 # default value (single realization of thresh_m distribution)
+    #n_thresh = 5 # gives better upper limits for thresh_m distribution
+    #n_thresh = 0 # turns of computation of thresh_m distribution
+   
     # And away we go!
     time00 = tm.time()
     periods, psi_m, thresh_m = \
-        psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi )
+        psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi, \
+                   n_thresh=n_thresh )
     time01 = tm.time()
 
     # extra info for plots:
@@ -1402,10 +1409,19 @@ def main():
     plot1 = 'psearch_fig_obs.png'
     fig_obs_kjm_py( hjd, mag, filts, filtnams, tag=tag, plotfile=plot1 )
 
+
     # Plot Psi vs. Frequency for all filters
+    tag2 = tag+('      [%d]'%(n_thresh))
     plot2 = 'psearch_fig_psi.png'
-    fig_psi_kjm_py( 1/periods, psi_m, thresh_m, filtnams, tag=tag,
+    fig_psi_kjm_py( 1/periods, psi_m, thresh_m, filtnams, tag=tag2,
         plotfile=plot2, verbose=True )
+    plot2b = 'psearch_fig_psib.png'  # magnified y-scale version of plot2
+    fig_psi_kjm_py( 1/periods, psi_m, thresh_m, filtnams, tag=tag2,
+        plotfile=plot2b, ylim=[-10,175] )
+    plot2c = 'psearch_fig_psic.png'  # do not show thresh_m distribution
+    thresh_m_zero = thresh_m*0.0
+    fig_psi_kjm_py( 1/periods, psi_m, thresh_m_zero, filtnams, tag=tag,
+        plotfile=plot2c )
 
     # period of the strongest peak of the combined Psi distribution
     nfilts = len(filtnams)
@@ -1431,6 +1447,8 @@ def main():
     # Show the plotfiles (if using a Mac)
     show_plot_on_mac(plot1)
     show_plot_on_mac(plot2)
+    show_plot_on_mac(plot2b)
+    show_plot_on_mac(plot2c)
     show_plot_on_mac(plot3)
 
     print '\nPeriod: %9.6f days' % p_peak
