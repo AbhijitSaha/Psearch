@@ -15,8 +15,8 @@ except ImportError:
 # version information:
 from collections import namedtuple
 version_info = namedtuple('version_info','major minor micro')
-version_info = version_info(major=0,minor=21,micro=16)
-__version__ = '%d.%d.%d' % version_info
+version_info = version_info(major=0,minor=23,micro=5)
+__version__ = '%d.%d.%d' % version_info 
 
 
 def reference():
@@ -38,7 +38,8 @@ def reference():
     return
 
 
-def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi, n_thresh=1):
+def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi, n_thresh=1, \
+  pmax=None, periods=None, verbose=False ):
     """
     NAME:
         psearch_py
@@ -97,11 +98,13 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi, n_thresh=1):
     assert (nfilts >= 1)
     psiacc = 0.
     confacc = 0.
+        
     for i in xrange(nfilts):
         fwant = i
         print 'psearch: ',filtnams[fwant],' filter'
         x, fy, theta, psi, conf = periodpsi2_py( hjd, mag, magerr, filts, \
-            pmin, dphi, fwant, n_thresh=n_thresh )
+          pmin, dphi, fwant, n_thresh=n_thresh, \
+          maxper=pmax, periods=periods, verbose=verbose )
         if (i == 0):
             # define the output arrays
             # -- needs size of period array from 1st band call to periodpsi2
@@ -127,7 +130,8 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi, n_thresh=1):
     return ptest, psi_m, thresh_m
 
 
-def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant, n_thresh=1 ):
+def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant, n_thresh=1,
+  maxper=None, periods=None, verbose=False ):
     """
     NAME:
         periodpsi2_py
@@ -144,6 +148,7 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant, n_thresh=1 ):
         fwant: integer value corresponding to desired passband from among values
             in filts array.
         n_thresh: Number of simulated error runs (default=1,min=0)
+        maxper: maximum period to explore
 
     OUTPUTS: 
         x: period array for which periodograms are computed
@@ -176,8 +181,11 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant, n_thresh=1 ):
     assert isinstance(filts,np.ndarray)
     assert (filts.dtype == np.float64)
     assert (filts.shape == hjd_shape)
-    assert (n_thresh >= 0)
-    #
+    assert (minper > 0.0)   # type: float
+    assert (dphi > 0.0)     # type: float
+    assert (n_thresh >= 0)  # type: int
+    
+    # normal usage:
     t0 = np.min(hjd)
     tmax = np.max(hjd)
     tspan = tmax - t0
@@ -185,17 +193,37 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant, n_thresh=1 ):
     minfreq = 2./tspan
     deltafreq = dphi/tspan
     nfreq = int( (maxfreq-minfreq)/deltafreq )
-    print 'periodpsi2: number of frequency samples: ', nfreq
     farray = minfreq + np.arange(nfreq)*deltafreq
     x = 1./farray
-    print 'periodpsi2: minimum and maximum periods: %13.7f %13.7f' % \
+
+    # user supplies period array or sets an upper period limit:
+    if ((periods is not None) or (maxper is not None)):
+        if (periods is not None):
+            x = periods.copy()
+        elif (maxper is not None):
+            assert (maxper > minper)
+            idx = ((x >= minper)&(x <= maxper))
+            assert (np.count_nonzero(idx) > 0), 'Need at least one period  8=X'
+            x = x[idx].copy()
+        farray = 1./x
+        nfreq = len(x)
+  
+    print 'periodpsi2: minimum and maximum periods: %14.8f %14.8f days' % \
       (min(x), max(x))
-    omega = farray * 2.0 * np.pi
-    #
+    print 'periodpsi2: number of period (frequency) samples: ', nfreq, \
+      '  <----------'
+    if (verbose):
+        print 'periodpsi2: ', x
+        print 'periodpsi2:   ^----- periods to be tested'
+        print 'periodpsi2: minimum and maximum frequencies: %14.8f %14.8f' % \
+          (min(farray), max(farray))
+
+    omega = farray * 2.0 * np.pi  # scargle_fast uses *angular* frequencies
+
     ok = (filts == fwant) & (magerr <= 0.2) & (magerr >= 0.0)
     tr = hjd[ok]
     nok = len(tr)
-    print 'periodpsi2: ',nok,' observations'
+    print 'periodpsi2: ',nok,' observations  <----------'
     yr = mag[ok]
     yr_err = magerr[ok]
     sss = np.argsort(tr) 
@@ -975,8 +1003,8 @@ def table_psi_kjm_py( xx=None, yy=None, ee=None, n=None):
     assert (len(lm_y) >= n)
     idx = (-lm_y).argsort()[:n]  # indices (location) of the n largest values
     print 'TABLE: BEGIN'
-    print 'rank   -----Period [days]-----       Psi    index  Frequency  Thresh'
-    fmt = '%2d  %12.7f +- %10.7f %9.2f %8d %10.6f %7.2f'
+    print 'rank   -------Period [days]------      Psi    index  Frequency  Thresh'
+    fmt = '%2d  %14.8f +- %11.8f %9.2f %8d %10.6f %7.2f'
     for j in xrange(n):
         k=idx[j]
         kk = lm_k[k]
@@ -1395,11 +1423,21 @@ def main():
     #n_thresh = 5 # gives better upper limits for thresh_m distribution
     #n_thresh = 0 # turns of computation of thresh_m distribution
    
+    # set analysis options
+    # defaults:
+    maxper = None
+    periods = None
+    verbose = False
+    # change maximum period, set period array, or be vebose:
+    #maxper = 1.0 
+    #periods = 0.2+(np.arange(1300000)*0.000001)
+    #verbose = True
+    
     # And away we go!
     time00 = tm.time()
     periods, psi_m, thresh_m = \
         psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi, \
-                   n_thresh=n_thresh )
+          n_thresh=n_thresh, pmax=maxper, periods=periods, verbose=verbose )
     time01 = tm.time()
 
     # extra info for plots:
@@ -1451,9 +1489,11 @@ def main():
     show_plot_on_mac(plot2c)
     show_plot_on_mac(plot3)
 
-    print '\nPeriod: %9.6f days' % p_peak
+    print '\n\nPeriod: %12.7f days  <----------------' % p_peak
+    
+    print '\nPeriod: %12.7f days  [published value]\n\n' % 0.5016240
 
-    print '\nmain: %8.3f seconds [walltime for psearch_py]' % (time01-time00)
+    print 'main: %8.3f seconds [walltime for psearch_py]' % (time01-time00)
     print("\nmain: That's all folks!  :-)")
 
 
