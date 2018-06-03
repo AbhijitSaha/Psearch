@@ -15,7 +15,7 @@ except ImportError:
 # version information:
 from collections import namedtuple
 version_info = namedtuple('version_info','major minor micro')
-version_info = version_info(major=0,minor=23,micro=5)
+version_info = version_info(major=0,minor=23,micro=6)
 __version__ = '%d.%d.%d' % version_info 
 
 
@@ -60,6 +60,9 @@ def psearch_py( hjd, mag, magerr, filts, filtnams, pmin, dphi, n_thresh=1, \
             be permitted when stepping to next test period.
             E.g., dphi = 0.02
         n_thresh: Number of simulated error runs (default=1,min=0)
+        pmax: maximum period to explore (default=None)
+        periods: array of periods to explore (default=None)
+        verbose: want verbose information? (default=False)
 
     OUTPUTS:
         ptest: 1-D array with N dimensions of periods for which the periodograms
@@ -148,8 +151,10 @@ def periodpsi2_py( hjd, mag, magerr, filts, minper, dphi, fwant, n_thresh=1,
         fwant: integer value corresponding to desired passband from among values
             in filts array.
         n_thresh: Number of simulated error runs (default=1,min=0)
-        maxper: maximum period to explore
-
+        maxper: maximum period to explore (default=None)
+        periods: array of periods to explore (default=None)
+        verbose: want verbose information? (default=False)
+        
     OUTPUTS: 
         x: period array for which periodograms are computed
         fy: Lomb-Scargle periodogram (co-aligned with x)
@@ -1013,7 +1018,7 @@ def table_psi_kjm_py( xx=None, yy=None, ee=None, n=None):
         y0err = ee[kk]
         kkp1 = kk + 1
         p1 = xx[kkp1]
-        sigma = (p0-p1)/2.  # estimate of error (one standard deviation)
+        sigma = abs((p0-p1)/2.)  # estimate of error (one standard deviation)
         print fmt % ( j+1, p0, sigma, y0, kk, 1./p0, y0err)
     print 'TABLE: END'
     return
