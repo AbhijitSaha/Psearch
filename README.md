@@ -6,7 +6,7 @@ IDL routines and the Python/Cython/C module for period finding with multiband da
 
     Saha, A., & Vivas, A. K. 2017, Astronomical Journal, 154, 231;
     A Hybrid Algorithm for Period Analysis from Multiband Data with
-    Sparse and Irregular Sampling for Abritrary Light-curve Shapes
+    Sparse and Irregular Sampling for Arbitrary Light-curve Shapes
 
 Henceforth, this article will be referred to as "the paper".
 
